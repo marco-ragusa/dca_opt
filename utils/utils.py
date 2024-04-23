@@ -68,7 +68,7 @@ def create_results(data: dict) -> list:
             "rebalance": data["rebalances"][i],
             "ticker_price": round(data["ticker_prices"][i], 2),
             "fees": data["fees"][i],
-            "buy": data["rebalances"][i] // data["ticker_prices"][i]
+            "buy": data["buy"][i]
         })
 
     return results
