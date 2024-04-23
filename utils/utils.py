@@ -149,8 +149,10 @@ def data_pack(data: dict) -> dict:
     # Improve change distribution for only_buy
     if data["only_buy"]:
         results, change = redistribute_change(results, change)
+    
+    total_fees = sum(fees for fees, buy in zip(data["fees"], data["buy"]) if buy != 0)
 
-    return { "results": results, "change": change }
+    return { "results": results, "total_fees": total_fees, "change": change }
 
 
 def secure_division(n, d):
