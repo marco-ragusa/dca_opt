@@ -35,6 +35,9 @@ def dca_opt(portfolio_data):
     for i, _ in enumerate(data["rebalances"]):
         if data["rebalances"][i] != 0:
             data["rebalances"][i] -= data["fees"][i]
+    
+    # Calculate how many shares to buy
+    data["buy"] = [r // tp for r, tp in zip(data["rebalances"], data["ticker_prices"])]
 
     # Pack and return the result data
     return utils.data_pack(data)
