@@ -25,9 +25,9 @@ def pretty_print(results: dict, sort: str = "id", desc: bool = False, only_buy: 
     print(json.dumps(results, indent=4))
 
 
-def data_rearrange(data: dict) -> dict:
+def data_unpack(data: dict) -> dict:
     """
-    Rearrange data dictionary containing portfolio information into individual lists.
+    Unpack data dictionary containing portfolio information into individual lists.
 
     Args:
     - data (dict): Dictionary containing portfolio information including 'only_buy', 'increment',
@@ -45,6 +45,112 @@ def data_rearrange(data: dict) -> dict:
         "shares": [item["shares"] for item in data["portfolio"]],
         "fees": [item["fees"] for item in data["portfolio"]],
     }
+
+
+def create_results(data: dict) -> list:
+    """
+    Generate a list of dictionaries containing financial data for each ticker.
+
+    Args:
+        data (dict): A dictionary containing financial data for various tickers.
+
+    Returns:
+        list: A list of dictionaries containing financial data for each ticker.
+    """
+    results = []
+    for i, ticker in enumerate(data["tickers"]):
+        results.append({
+            "id": i,
+            "ticker": ticker,
+            "current_percentage": round(data["current_percentages"][i], 2),
+            "desired_percentage": data["desired_percentage"][i],
+            "shares": data["shares"][i],
+            "rebalance": data["rebalances"][i],
+            "ticker_price": round(data["ticker_prices"][i], 2),
+            "fees": data["fees"][i],
+            "buy": data["rebalances"][i] // data["ticker_prices"][i]
+        })
+
+    return results
+
+
+def calculate_change(increment: float, results: list) -> float:
+    """
+    Calculate the change based on the given increment and results.
+
+    Parameters:
+        increment (float): The total amount of change to be distributed.
+        results (list): A list of dictionaries representing assets with their
+            buy quantity and ticker price.
+
+    Returns:
+        float: The change calculated after subtracting the total value of
+            purchased assets from the increment.
+    """
+    total = 0
+    for result in results:
+        total += result["buy"] * result["ticker_price"]
+
+    change = increment - total
+
+    return change
+
+
+def redistribute_change(results, change):
+    """
+    Redistribute the given change among the assets in the provided results.
+
+    Parameters:
+        results (list): A list of dictionaries representing assets with their
+            current percentage, desired percentage, buy quantity, ticker price,
+            and id.
+        change (float): The amount of change to be redistributed.
+
+    Returns:
+        tuple: A tuple containing the updated results after redistributing the
+            change among assets and the remaining change rounded to two
+            decimal places.
+    """
+    # Add 0.01 to avoid division by zero and improve sorting
+    results.sort(key=lambda x: x["current_percentage"] / (x["desired_percentage"] + 0.01))
+
+    # Redistribute the change between assets
+    for i, result in enumerate(results):
+        # Check if you could buy with rebalance
+        if result["buy"] > 0:
+            buy_quantity = change // result["ticker_price"]
+            change -= buy_quantity * result["ticker_price"]
+            results[i]["buy"] += buy_quantity
+
+    # Sort by id
+    results.sort(key=lambda x: x["id"], reverse=True)
+
+    return results, round(change, 2)
+
+
+def data_pack(data: dict) -> dict:
+    """
+    Packs data into a dictionary containing results and change.
+
+    Args:
+        data (dict): A dictionary containing input data.
+
+    Returns:
+        dict: A dictionary containing packed data.
+            Keys:
+                - "results" (list): Initial results list.
+                - "change" (float): Calculated change value.
+    """
+    # Create initial results list
+    results = create_results(data)
+
+    change = calculate_change(data["increment"], results)
+
+    # Improve change distribution for only_buy
+    if data["only_buy"]:
+        results, change = redistribute_change(results, change)
+
+    return { "results": results, "change": change }
 
 
 def secure_division(n, d):
