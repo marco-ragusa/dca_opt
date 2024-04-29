@@ -16,7 +16,10 @@ venv.bak/
 # Portfolios
 portfolios/
 
-# General
+# MAC OS
 .DS_Store
 .AppleDouble
 .LSOverride
+
+# VS Code
+.vscode/
