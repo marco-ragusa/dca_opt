@@ -32,9 +32,7 @@ def dca_opt(portfolio_data):
     )
 
     # Remove fees from rebalances
-    for i, _ in enumerate(data["rebalances"]):
-        if data["rebalances"][i] != 0:
-            data["rebalances"][i] -= data["fees"][i]
+    data["rebalances"] = [r - f if r != 0 else r for r, f in zip(data["rebalances"], data["fees"])]
     
     # Calculate how many shares to buy
     data["buy"] = [r // tp for r, tp in zip(data["rebalances"], data["ticker_prices"])]
