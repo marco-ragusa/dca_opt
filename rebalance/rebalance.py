@@ -1,60 +1,57 @@
-"""Module for rebalancing a portfolio."""
+"""Core functions for portfolio rebalancing calculations."""
 
-def calculate_only_buy(rebalances, increment) -> list[float]:
+
+def calculate_only_buy(rebalances, increment):
     """
-    Calculate the incremental values for positive rebalances only.
+    Redistribute the increment proportionally among positive rebalances.
 
     Args:
-    - rebalances (list[float]): List of rebalance values.
-    - increment (float): Incremental value to distribute among positive rebalances.
+        rebalances (list[float]): List of rebalance values.
+        increment (float): Value to distribute among positive rebalances.
 
     Returns:
-    - list[float]: List of incremental values for positive rebalances.
+        list[float]: Adjusted rebalances with only positive increments.
     """
-    # Replace negative rebalance with zero
-    rebalances = [max(rebalance, 0) for rebalance in rebalances]
+    positive_rebalances = [max(0, r) for r in rebalances]
+    total_positive = sum(positive_rebalances)
 
-    # Sum only positive rebalances
-    rebalances_sum = sum(rebalances)
+    if total_positive == 0:
+        return [0] * len(rebalances)
 
-    # Calculate the percentage of each positive rebalance relative to the sum of positive rebalances
-    rebalances_percentages = []
-    for rebalance in rebalances:
-        rebalances_percentages.append((rebalance / rebalances_sum) * 100)
-
-    # Distribute the increment based on the positive rebalance percentages
-    incremental_rebalances = []
-    for percentage in rebalances_percentages:
-        incremental_rebalances.append((percentage * increment) / 100)
-
-    return incremental_rebalances
+    return [
+        (r / total_positive) * increment for r in positive_rebalances
+    ]
 
 
-def calculate_rebalance(only_buy, increment, values, percentages) -> list[float]:
+def calculate_rebalance(only_buy, increment, values, percentages):
     """
-    Calculate rebalances based on given values and percentages.
+    Calculate portfolio rebalances based on target percentages.
 
     Args:
-    - only_buy (bool): Flag indicating whether to consider only positive rebalances.
-    - increment (float): Incremental value to distribute among rebalances.
-    - values (list[float]): Initial values.
-    - percentages (list[float]): Desired percentages for rebalancing.
+        only_buy (bool): Flag to restrict rebalancing to positive adjustments.
+        increment (float): Amount available for rebalancing.
+        values (list[float]): Current values of portfolio holdings.
+        percentages (list[float]): Target allocation percentages.
 
     Returns:
-    - list[float]: List of rebalance values.
+        list[float]: Adjusted rebalance values for each asset.
     """
-    # Calculate the total sum of initial values and the increment
-    total_sum = sum(values) + increment
+    # Calculate the total target portfolio value after increment
+    total_value = sum(values) + increment
 
-    # Calculate the rebalance for each value based on the desired percentages
-    rebalances = []
-    for percentage, value in zip(percentages, values):
-        rebalances.append((total_sum * (percentage / 100)) - value)
+    # Calculate rebalances as the difference between target and current values
+    rebalances = [
+        (total_value * (p / 100)) - v for p, v in zip(percentages, values)
+    ]
 
-    if only_buy:
-        rebalances = calculate_only_buy(rebalances, increment)
+    # Adjust rebalances for only_buy scenario
+    adjusted_rebalances = (
+        calculate_only_buy(rebalances, increment)
+        if only_buy
+        else rebalances
+    )
 
-    return [round(rebalance, 2) for rebalance in rebalances]
+    return [round(r, 2) for r in adjusted_rebalances]
 
 
 def main():
