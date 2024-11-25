@@ -90,36 +90,3 @@ def calculate_rebalance(only_buy, increment, values, percentages):
     )
 
     return [round(r, 2) for r in adjusted_rebalances]
-
-
-def main():
-    """Main function for local tests only"""
-    increment = 100
-    values = [0, 40, 100, 100]
-    percentages = [60, 20, 10, 10]
-
-    only_buy = False
-    print(calculate_rebalance(only_buy, increment, values, percentages))
-    # [204.0, 28.0, -66.0, -66.0]
-
-    only_buy = True
-    print(calculate_rebalance(only_buy, increment, values, percentages))
-    # [87.93, 12.07, 0.0, 0.0]
-
-    ###
-
-    increment = 0
-    values = [0, 0, 100, 100]
-    percentages = [60, 20, 10, 10]
-
-    only_buy = False
-    print(calculate_rebalance(only_buy, increment, values, percentages))
-    # [120.0, 120.0, -80.0, -80.0]
-
-    only_buy = True
-    print(calculate_rebalance(only_buy, increment, values, percentages))
-    # [0.0, 0.0, 0.0, 0.0]
-
-
-if __name__ == "__main__":
-    main()
