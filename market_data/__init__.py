@@ -1,3 +1,5 @@
-"""Init market_data."""
+"""Market data retrieval module."""
 
-from market_data.market_data import get_price
+from .market_data import get_prices
+
+__all__ = ["get_prices"]

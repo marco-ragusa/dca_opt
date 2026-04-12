@@ -1,0 +1,18 @@
+{
+    "only_buy": true,
+    "increment": 1000,
+    "portfolio": [
+        {
+            "ticker": "VWCE.DE",
+            "desired_percentage": 60,
+            "shares": 0,
+            "fees": 0
+        },
+        {
+            "ticker": "VAGF.DE",
+            "desired_percentage": 40,
+            "shares": 10,
+            "fees": 0
+        }
+    ]
+}

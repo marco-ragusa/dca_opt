@@ -1,3 +1,5 @@
-"""Init utils."""
+"""General-purpose utility functions."""
 
-from utils.utils import pretty_print, data_unpack, data_pack, secure_division
+from .utils import pretty_print, secure_division
+
+__all__ = ["pretty_print", "secure_division"]

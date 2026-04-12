@@ -1,3 +1,5 @@
-"""Init rebalance."""
+"""Portfolio rebalancing calculation module."""
 
-from rebalance.rebalance import calculate_rebalance
+from .rebalance import calculate_rebalance, redistribute_change
+
+__all__ = ["calculate_rebalance", "redistribute_change"]
