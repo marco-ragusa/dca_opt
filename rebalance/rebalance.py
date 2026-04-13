@@ -64,43 +64,79 @@ def _redistribute_proportional_to_gap(
 
     Used in only_buy mode.
 
-    For every asset the gap is computed as the distance between its current value
-    and where it needs to be in the post-increment total portfolio:
+    For every asset the gap measures how far its current value sits from its ideal
+    post-increment target value.  Overweight assets (negative gap) receive nothing;
+    underweight assets (positive gap) share the increment in proportion to their gap.
+    This is a practical heuristic known as Proportional Redistribution on Positive
+    Gaps, commonly used in cash-flow and smart-contribution rebalancing algorithms.
 
-        gap_i = (sum(values) + increment) * (target_i / 100) - value_i
+    Decision variables:
+        v_i    -- current monetary value of asset i
+        t_i    -- target allocation weight for asset i (%)
+        Delta  -- new cash to distribute (increment)
+        T      -- post-increment total:  T = sum(v_i) + Delta
 
-    Negative gaps mean the asset is already overweight relative to the new total
-    and receive zero new money. Positive gaps act as weights: an asset with a
-    large gap receives a proportionally larger slice of the increment than one with
-    a small gap. This provides a smooth gradient:
+    Gap formula:
+        g_i = T * (t_i / 100) - v_i
 
-    - Heavily overweight assets have a large negative gap -> weight = 0.
-    - Slightly overweight assets whose gap flips positive due to the new total
-      receive a small but non-zero weight (not hard-excluded).
-    - Heavily underweight assets have large positive gaps -> higher weight.
+        A key identity holds when weights sum to 100 %:
+            sum(g_i) = Delta
+
+        g_i > 0  means asset i is underweight  -> eligible to receive money.
+        g_i <= 0 means asset i is overweight   -> excluded (buy-only constraint).
+
+    Objective (implicitly maximised):
+        Allocate a_i to each eligible asset proportionally to its positive gap,
+        spending exactly Delta and producing the smoothest gradient towards target.
+
+    Allocation formula:
+        S+  = sum(g_i  for all i where g_i > 0)
+        a_i = Delta * (g_i / S+)   if g_i > 0
+            = 0                    otherwise
+
+        Conservation: sum(a_i) = Delta * (S+ / S+) = Delta (no money lost).
+
+    Formal algorithm (3 steps):
+        1. Compute T = sum(values) + increment and g_i for every asset.
+        2. Sum only the positive gaps into S+.  If S+ == 0 (all assets overweight),
+           return a zero vector -- no eligible asset exists.
+        3. For each asset i:
+               if g_i > 0:  a_i = Delta * (g_i / S+)
+               else:        a_i = 0
 
     Example - values [0, 40, 100, 100], targets [60, 20, 10, 10], increment 100:
-    - Post-increment total = 340.
-    - Gaps: A = +204, B = +28, C = -66, D = -66.
-    - Total positive gap = 232.
-    - A receives 100 * 204/232 = 87.93; B receives 100 * 28/232 = 12.07.
+        T    = 340
+        g_A  = 340 * 0.60 - 0   = +204
+        g_B  = 340 * 0.20 - 40  =  +28
+        g_C  = 340 * 0.10 - 100 =  -66  -> 0
+        g_D  = 340 * 0.10 - 100 =  -66  -> 0
+        S+   = 232
+        a_A  = 100 * 204/232 = 87.93;  a_B = 100 * 28/232 = 12.07
+
+    Complexity: O(n), two linear passes over the computed gaps vector
+    (one to sum positive gaps, one to allocate); building the gaps
+    vector and summing the raw values each add one further O(n) pass,
+    so the total is a constant number of linear passes.
 
     Args:
         values: Current monetary value held in each asset.
         percentages: Target allocation percentages, aligned with values.
-        increment: Total new cash to distribute.
+        increment: Total new cash to distribute (Delta).
 
     Returns:
         Allocation amounts per asset; overweight assets receive 0, underweight
         assets receive amounts summing exactly to increment.
     """
+    # Step 1 – Compute T and the rebalance gap g_i = T * (t_i / 100) - v_i.
     total_value = sum(values) + increment
     gaps = [(total_value * p / 100.0) - v for p, v in zip(percentages, values)]
 
+    # Step 2 – Sum positive gaps into S+.  If S+ == 0, no eligible asset exists.
     total_positive = sum(g for g in gaps if g > 0)
     if total_positive == 0:
         return [0.0] * len(values)
 
+    # Step 3 – Allocate proportionally: a_i = Delta * (g_i / S+) if g_i > 0.
     return [
         increment * (g / total_positive) if g > 0 else 0.0
         for g in gaps
