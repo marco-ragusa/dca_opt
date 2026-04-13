@@ -173,6 +173,41 @@ class TestRedistributeChange(unittest.TestCase):
         self.assertEqual(updated[1], 1.0)   # 50 < 150, nothing extra
         self.assertEqual(remaining, 50.0)
 
+    def test_docstring_step_by_step_example(self):
+        """Verifies the two-asset example from the formal algorithm docstring.
+
+        Setup (from the greedy knapsack description):
+            Asset A: price=10, current=20%, desired=50%, initial_qty=1
+            Asset B: price=20, current=30%, desired=50%, initial_qty=1
+            change = 50
+
+        Step 1 – priorities:
+            k_A = 20 / (50 + 0.01) = 0.39996...
+            k_B = 30 / (50 + 0.01) = 0.59988...
+            Order: A first (lower k_A → more underweight)
+
+        Step 3 – A processed first:
+            x_A = floor(50 / 10) = 5  →  remaining = 50 - 50 = 0
+
+        Step 3 – B processed next:
+            remaining = 0  →  x_B = floor(0 / 20) = 0
+
+        Step 4 – Result: A=6, B=1, remaining=0.
+        """
+        buy_quantities = [1.0, 1.0]
+        ticker_prices = [10.0, 20.0]
+        current_pcts = [20.0, 30.0]
+        desired_pcts = [50.0, 50.0]
+        change = 50.0
+
+        updated, remaining = redistribute_change(
+            buy_quantities, ticker_prices, current_pcts, desired_pcts, change
+        )
+
+        self.assertEqual(updated[0], 6.0)   # 1 original + 5 from change
+        self.assertEqual(updated[1], 1.0)   # change exhausted after A
+        self.assertEqual(remaining, 0.0)
+
 
 class TestFeeEdgeCases(unittest.TestCase):
     """Tests that verify the fee-subtraction contract.

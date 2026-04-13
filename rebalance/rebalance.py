@@ -153,6 +153,39 @@ def redistribute_change(
     Only assets that already have a non-zero buy quantity are eligible, preventing
     unintended purchases in assets intentionally excluded from the current round.
 
+    Algorithm:
+        This function implements a greedy algorithm for the Unbounded Integer Knapsack
+        Problem adapted to portfolio underweight prioritisation (sometimes called the
+        Greedy Assignment by Underweight Priority method in portfolio rebalancing).
+
+    Decision variables:
+        x_i  in  Z≥0  -- extra shares to buy for asset i
+        q_i^0         -- initial whole-share buy quantity for asset i
+        p_i           -- price per share for asset i
+        c             -- leftover cash (change)
+
+    Objective (implicitly maximised):
+        Maximise  Σ w_i · x_i,   w_i ∝ (desired_i + ε) / current_i
+
+        A higher w_i means the asset is further below its target allocation.
+
+    Constraints:
+        Capacity:    Σ p_i · x_i ≤ c
+        Eligibility: x_i = 0 whenever q_i^0 ≤ 0 (only buy what was already scheduled)
+        Integrality: x_i ∈ Z≥0
+
+    Formal algorithm (4 steps):
+        1. Compute priority ratio  k_i = current_i / (desired_i + ε)  for every asset.
+           A low ratio means the asset is heavily underweight (high urgency).
+        2. Sort asset indices in ascending order of k_i.
+        3. For each index i in that order:
+               if q_i^0 > 0:  x_i = floor(c_remaining / p_i)
+                              c_remaining -= x_i · p_i
+               else:          x_i = 0
+        4. Return updated quantities and c_remaining (rounded to 2 decimal places).
+
+    Complexity: O(n log n) dominated by the sort in step 2.
+
     Args:
         buy_quantities: Whole share counts to purchase per asset.
         ticker_prices: Current price per share for each asset.
@@ -163,18 +196,28 @@ def redistribute_change(
     Returns:
         A tuple of (updated buy quantities, remaining unallocated change).
     """
-    # Sort asset indices: lowest current/desired ratio first = most underweight first.
-    priority = sorted(
-        range(len(buy_quantities)),
-        key=lambda i: current_percentages[i] / (desired_percentages[i] + 0.01),
-    )
+    # Step 1 – Compute priority ratio k_i = current_i / (desired_i + ε).
+    # ε = 0.01 avoids division-by-zero when desired_i = 0.
+    # A lower k_i means the asset is more underweight relative to its target.
+    epsilon = 0.01
+    priorities = [
+        current_percentages[i] / (desired_percentages[i] + epsilon)
+        for i in range(len(buy_quantities))
+    ]
 
+    # Step 2 – Sort asset indices ascending by k_i (most underweight first).
+    sorted_indices = sorted(range(len(buy_quantities)), key=lambda i: priorities[i])
+
+    # Step 3 – Greedily assign extra shares to each eligible asset.
+    # x_i = floor(c_remaining / p_i); then reduce remaining change by x_i · p_i.
     updated = list(buy_quantities)
-    for i in priority:
-        if updated[i] <= 0:
+    remaining = change
+    for i in sorted_indices:
+        if updated[i] <= 0:             # eligibility: skip assets not in this buy round
             continue
-        extra = change // ticker_prices[i]
-        change -= extra * ticker_prices[i]
-        updated[i] += extra
+        x_i = remaining // ticker_prices[i]     # floor(c_remaining / p_i)
+        remaining -= x_i * ticker_prices[i]
+        updated[i] += x_i
 
-    return updated, round(change, 2)
+    # Step 4 – Return updated quantities and final remaining change.
+    return updated, round(remaining, 2)
