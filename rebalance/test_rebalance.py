@@ -22,13 +22,15 @@ class TestCalculateRebalance(unittest.TestCase):
 
         Post-increment total = 340.
         Gaps: A = 340*0.60-0 = +204, B = 340*0.20-40 = +28, C = -66, D = -66.
-        Total positive gap = 232.
-        A receives 100 * 204/232 = 87.93; B receives 100 * 28/232 = 12.07.
+        Total positive gap S+ = 232.
+        A receives 100 * 204/232 ≈ 87.93; B receives 100 * 28/232 ≈ 12.07.
         C and D have negative gaps and receive 0 (overweight relative to new total).
+        Values are compared after {:.2f} formatting to match display precision.
         """
+        result = calculate_rebalance(True, 100, [0, 40, 100, 100], [60, 20, 10, 10])
         self.assertEqual(
-            calculate_rebalance(True, 100, [0, 40, 100, 100], [60, 20, 10, 10]),
-            [87.93, 12.07, 0.0, 0.0],
+            [f"{v:.2f}" for v in result],
+            ["87.93", "12.07", "0.00", "0.00"],
         )
 
     def test_zero_increment_allow_sell(self):

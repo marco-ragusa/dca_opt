@@ -97,17 +97,15 @@ def dca_opt(portfolio: Portfolio) -> dict:
             buy_quantities, ticker_prices, current_pcts, desired_pcts, change
         )
 
-    change = round(change, 2)
-
     results = [
         {
             "id": i,
             "ticker": ticker,
-            "current_percentage": round(cur_pct, 2),
+            "current_percentage": cur_pct,
             "desired_percentage": des_pct,
             "shares": share,
             "allocated": alloc,
-            "ticker_price": round(price, 2),
+            "ticker_price": price,
             "fees": fee,
             "buy": qty,
         }

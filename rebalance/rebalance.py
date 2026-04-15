@@ -170,7 +170,7 @@ def calculate_rebalance(
         total_value = sum(values) + increment
         rebalances = _compute_target_rebalances(values, percentages, total_value)
 
-    return [round(r, 2) for r in rebalances]
+    return rebalances
 
 
 def redistribute_change(
@@ -255,5 +255,5 @@ def redistribute_change(
         remaining -= x_i * ticker_prices[i]
         updated[i] += x_i
 
-    # Step 4 – Return updated quantities and final remaining change.
-    return updated, round(remaining, 2)
+    # Step 4 – Return updated quantities and remaining change (caller rounds for display).
+    return updated, remaining
