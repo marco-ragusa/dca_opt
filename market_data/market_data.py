@@ -3,6 +3,7 @@
 import logging
 import time
 
+import pandas as pd
 import yfinance as yf
 
 logger = logging.getLogger(__name__)
@@ -83,7 +84,7 @@ def get_prices(tickers: list[str]) -> dict[str, float]:
             close = raw["Close"]
 
             # yfinance returns a Series (not DataFrame) for a single ticker
-            if hasattr(close, "name"):
+            if isinstance(close, pd.Series):
                 close = close.to_frame(name=tickers[0])
 
             for ticker in tickers:

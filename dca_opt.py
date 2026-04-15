@@ -37,16 +37,22 @@ def dca_opt(portfolio: Portfolio) -> dict:
         1. Fetch current market prices in a single batch request.
         2. Calculate each asset's current monetary value and allocation weight.
         3. Compute optimal rebalance amounts to approach target allocations.
-        4. Subtract broker fees (never letting the amount go below zero).
+        4. Subtract broker fees from each allocation; clamp to zero.
         5. Convert currency amounts to whole share counts via floor division.
-        6. Redistribute any leftover change among eligible underweight assets.
+        6. Redistribute leftover change among eligible underweight assets
+           (only_buy mode only).
+        7. Deduct executed broker fees from leftover change so that
+           ``change`` reflects the true uninvested remainder.
 
     Args:
         portfolio: A fully validated Portfolio instance.
 
     Returns:
-        A dict with keys 'results' (list of per-asset dicts), 'total_fees' (float),
-        and 'change' (float for leftover uninvested cash).
+        A dict with keys:
+            'results'    -- list of per-asset dicts (field 'allocated' holds
+                            the fee-adjusted target amount for that asset),
+            'total_fees' -- sum of fees paid for all executed purchases,
+            'change'     -- leftover cash after shares and fees are deducted.
     """
     tickers = [a.ticker for a in portfolio.assets]
     desired_pcts = [a.desired_percentage for a in portfolio.assets]
@@ -74,35 +80,42 @@ def dca_opt(portfolio: Portfolio) -> dict:
     ]
 
     # 5. Convert to whole share counts
-    buy_quantities = [int(r // p) for r, p in zip(rebalance_amounts, ticker_prices)]
+    buy_quantities: list[int] = [int(r // p) for r, p in zip(rebalance_amounts, ticker_prices)]
 
-    # 6. Redistribute leftover change
+    # 6. Deduct fees before redistribution so that fee-reserved cash is never
+    #    handed to redistribute_change (which would otherwise spend it on shares,
+    #    pushing the final change negative).
+    #    Note: redistribute_change only touches assets already scheduled for
+    #    purchase (buy > 0), so total_fees is stable across redistribution.
     spent = sum(b * p for b, p in zip(buy_quantities, ticker_prices))
-    change = portfolio.increment - spent
+    total_fees = sum(f for f, b in zip(fees, buy_quantities) if b > 0)
+    change = portfolio.increment - spent - total_fees
 
+    # 7. Redistribute the true leftover change (only_buy mode only)
     if portfolio.only_buy:
         buy_quantities, change = rebalance.redistribute_change(
             buy_quantities, ticker_prices, current_pcts, desired_pcts, change
         )
-    else:
-        change = round(change, 2)
+
+    change = round(change, 2)
 
     results = [
         {
             "id": i,
-            "ticker": tickers[i],
-            "current_percentage": round(current_pcts[i], 2),
-            "desired_percentage": desired_pcts[i],
-            "shares": shares[i],
-            "rebalance": rebalance_amounts[i],
-            "ticker_price": round(ticker_prices[i], 2),
-            "fees": fees[i],
-            "buy": buy_quantities[i],
+            "ticker": ticker,
+            "current_percentage": round(cur_pct, 2),
+            "desired_percentage": des_pct,
+            "shares": share,
+            "allocated": alloc,
+            "ticker_price": round(price, 2),
+            "fees": fee,
+            "buy": qty,
         }
-        for i in range(len(tickers))
+        for i, (ticker, cur_pct, des_pct, share, alloc, price, fee, qty) in enumerate(
+            zip(tickers, current_pcts, desired_pcts, shares,
+                rebalance_amounts, ticker_prices, fees, buy_quantities)
+        )
     ]
-
-    total_fees = sum(fees[i] for i in range(len(tickers)) if buy_quantities[i] > 0)
 
     return {"results": results, "total_fees": total_fees, "change": change}
 

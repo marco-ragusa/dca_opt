@@ -174,12 +174,12 @@ def calculate_rebalance(
 
 
 def redistribute_change(
-    buy_quantities: list[float],
+    buy_quantities: list[int],
     ticker_prices: list[float],
     current_percentages: list[float],
     desired_percentages: list[float],
     change: float,
-) -> tuple[list[float], float]:
+) -> tuple[list[int], float]:
     """Redistribute leftover cash from discrete share purchases.
 
     After converting currency amounts to whole share counts via floor division,
@@ -251,7 +251,7 @@ def redistribute_change(
     for i in sorted_indices:
         if updated[i] <= 0:             # eligibility: skip assets not in this buy round
             continue
-        x_i = remaining // ticker_prices[i]     # floor(c_remaining / p_i)
+        x_i = int(remaining // ticker_prices[i])     # floor(c_remaining / p_i)
         remaining -= x_i * ticker_prices[i]
         updated[i] += x_i
 
