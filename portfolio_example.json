@@ -1,6 +1,7 @@
 {
     "only_buy": true,
     "increment": 1000,
+    "optimal_redistribute": true,
     "portfolio": [
         {
             "ticker": "VWCE.DE",
