@@ -1,5 +1,13 @@
 """Core functions for portfolio rebalancing calculations."""
 
+# Upper bound (in cents) on the ``change`` for which the exact knapsack DP in
+# :func:`redistribute_change_optimal` is allowed to run.  Above this cap the
+# function silently falls back to the greedy :func:`redistribute_change` to
+# keep memory and time usage bounded.  1_000_000 cents = $10,000: well above
+# any realistic per-period leftover produced by a single DCA contribution
+# cycle.
+MAX_CENTS: int = 1_000_000
+
 
 def validate_inputs(
     values: list[float],
@@ -47,7 +55,7 @@ def _compute_target_rebalances(
     Args:
         values: Current monetary values of each holding.
         percentages: Target allocation percentages.
-        total_value: Target total portfolio value (current + increment).
+        total_value: Target total portfolio value (current + increment) and > 0.
 
     Returns:
         List of signed rebalance amounts; positive means buy, negative means sell.
@@ -159,7 +167,7 @@ def calculate_rebalance(
         percentages: Target allocation percentage for each asset (must sum to 100).
 
     Returns:
-        Currency amounts to invest/divest per holding, rounded to 2 decimal places.
+        Currency amounts to invest/divest per holding.
         In only_buy mode all amounts are >= 0.
     """
     validate_inputs(values, percentages, increment)
@@ -256,4 +264,234 @@ def redistribute_change(
         updated[i] += x_i
 
     # Step 4 – Return updated quantities and remaining change (caller rounds for display).
+    return updated, remaining
+
+
+def redistribute_change_optimal(
+    only_buy: bool,
+    buy_quantities: list[int],
+    ticker_prices: list[float],
+    current_percentages: list[float],
+    desired_percentages: list[float],
+    change: float,
+) -> tuple[list[int], float]:
+    """Exact redistribution of leftover cash via bounded-knapsack dynamic programming.
+
+    This is a drop-in, more powerful alternative to :func:`redistribute_change`.
+    The greedy heuristic in :func:`redistribute_change` commits to the most
+    underweight asset first and can strand cash whenever the first-pick asset's
+    price does not evenly divide the leftover; this function instead enumerates
+    every integer combination of extra shares via dynamic programming and picks
+    the one that spends the most money while respecting an additional balance
+    constraint that depends on ``only_buy``.
+
+    Two modes, same DP:
+        * ``only_buy=True``  -- Restrict the candidate set to assets that are
+          strictly *underweight* relative to their desired allocation.  This
+          preserves the buy-only promise "never increase the weight of an
+          already-overweight asset", even during the redistribution phase.
+          Among combinations that spend the same amount, the tiebreaker
+          prefers those that concentrate on the most underweight assets.
+
+        * ``only_buy=False`` -- Any asset already scheduled for purchase
+          (``buy_quantities[i] > 0``) is a candidate.  The algorithm maximises
+          spent cash without a balance filter, because any minor overshoot can
+          be corrected by selling on the next rebalance cycle.  The tiebreaker
+          is still applied so the output is deterministic.
+
+    Problem formulation:
+        Variables:
+            x_i in Z >= 0            -- extra shares bought for asset i.
+            p_i                      -- price of asset i, in cents (integer).
+            c                        -- change to redistribute, in cents.
+            w_i = desired_i - current_i  (tiebreaker weight).
+            E                        -- eligibility set (see below).
+
+        Primary objective: maximise   S(x) = sum(p_i * x_i)      subject to S(x) <= c.
+        Tiebreaker:        maximise   T(x) = sum(w_i * x_i)      among ties on S.
+
+        Eligibility set:
+            E = { i : buy_quantities[i] > 0 }                          always,
+            E = E and { i : current_i < desired_i }          if only_buy=True.
+
+    Dynamic programming (forward table of size c+1):
+        dp_spent[k]   = max cents spendable with capacity k.
+        dp_tie[k]     = best tiebreaker score achieved at that spent amount.
+        parent[k]     = last item placed to reach dp_spent[k] (-1 = "copied
+                        from k-1", no item placed).
+
+        Transition for k = 1 .. c:
+            Start from the "carry forward" option (dp_spent[k-1], dp_tie[k-1], -1).
+            For every candidate i in E with p_i <= k:
+                cand = (dp_spent[k - p_i] + p_i, dp_tie[k - p_i] + w_i)
+                replace the running best if strictly greater under (spent, tie)
+                lexicographic order.
+
+        Reconstruction:
+            Walk parent backwards from k = c to 0: when parent[k] != -1 we
+            placed that item and jump to k - p_{parent[k]}; otherwise we jump
+            to k - 1.
+
+    Complexity:
+        Time  O(n * c),   space O(c),   where c = change_cents and n = |E|.
+
+    Safety cap:
+        If ``change_cents`` exceeds :data:`MAX_CENTS` the function logs a
+        warning and delegates to the greedy :func:`redistribute_change`.
+        This prevents pathological memory/time usage on very large leftover
+        amounts (the realistic DCA leftover is at most a few hundred euros).
+
+    Float/cent conversion:
+        Prices and change are truncated to the nearest cent via ``int()``
+        rather than rounded.  Truncation is semantically consistent with the
+        floor-division logic used throughout the rebalancing pipeline: both
+        operations agree that only whole cents actually available should be
+        considered as capacity.  The final remaining change is computed
+        entirely in integer cents (``change_cents - spent_cents``) and
+        divided by 100 only once at the very end, minimising floating-point
+        drift.  This mirrors the approach of :func:`redistribute_change`,
+        which works directly in floats with ``//`` and ``*`` without any
+        intermediate rounding, and produces equally precise results.
+
+        Prices are expected to be pre-rounded to 2 decimal places at the
+        call site (e.g. via ``round(price, 2)`` after fetching from the
+        market data provider) so that ``int(p * 100)`` is always exact.
+
+        ``prices_cents`` is built via a single walrus-operator pass over
+        ``eligible``, simultaneously filtering by capacity and storing the
+        converted value — so ``int(ticker_prices[i] * 100)`` is computed
+        exactly once per asset.  ``tie_score`` and ``candidates`` are then
+        derived from the same dict, with no redundant work.
+
+    Args:
+        only_buy: Selects the eligibility policy (see above).
+        buy_quantities: Whole share counts already scheduled for each asset.
+        ticker_prices: Current price per share for each asset, pre-rounded
+            to 2 decimal places.
+        current_percentages: Current portfolio weight of each asset (%).
+        desired_percentages: Target portfolio weight of each asset (%).
+        change: Leftover cash to redistribute, in portfolio currency units.
+
+    Returns:
+        A tuple ``(updated_buy_quantities, remaining_change)``.  The remaining
+        change is ``change - sum_of_extra_shares * price`` (currency units).
+        When no extra shares can be allocated the original inputs are returned
+        unchanged.
+
+    See Also:
+        :func:`redistribute_change`: the original O(n log n) greedy heuristic.
+    """
+    n = len(buy_quantities)
+
+    # Fast exits: nothing to distribute, or no assets at all.
+    if n == 0 or change <= 0:
+        return list(buy_quantities), change
+
+    # Base eligibility (same contract as redistribute_change): only touch
+    # assets that were already scheduled for purchase in this cycle.
+    eligible = [i for i in range(n) if buy_quantities[i] > 0]
+    if not eligible:
+        return list(buy_quantities), change
+
+    # Stricter eligibility for only_buy mode: never push an asset further
+    # above its target weight - exclude everything that is not STRICTLY
+    # underweight.  This preserves the portfolio-balance guarantee promised by
+    # buy-only mode even in the redistribution phase.
+    if only_buy:
+        eligible = [
+            i for i in eligible
+            if current_percentages[i] < desired_percentages[i]
+        ]
+        if not eligible:
+            return list(buy_quantities), change
+
+    change_cents = int(change * 100)
+    if change_cents <= 0:
+        return list(buy_quantities), change
+
+    # Build prices_cents in a single pass using the walrus operator (:=):
+    # int(ticker_prices[i] * 100) is computed exactly once per asset and
+    # immediately used both as the filter condition and as the dict value,
+    # eliminating the redundant second calculation that a separate candidates
+    # list + dict comprehension would require.
+    prices_cents = {
+        i: p
+        for i in eligible
+        if 0 < (p := int(ticker_prices[i] * 100)) <= change_cents
+    }
+    candidates = list(prices_cents.keys())
+    if not candidates:
+        return list(buy_quantities), change
+
+    # Safety cap: very large leftovers silently fall back to the cheap
+    # greedy pass to avoid O(n * change_cents) memory/time blowups.
+    if change_cents > MAX_CENTS:
+        return redistribute_change(
+            buy_quantities, ticker_prices,
+            current_percentages, desired_percentages, change,
+        )
+
+    # Per-candidate tiebreaker weight: positive = underweight (to be preferred).
+    # Computed only for confirmed candidates, avoiding redundant work on
+    # ineligible assets.
+    tie_score = {
+        i: desired_percentages[i] - current_percentages[i]
+        for i in candidates
+    }
+
+    # --- Dynamic programming: lexicographic max over (spent, tiebreaker) ----
+    size     = change_cents + 1
+    dp_spent = [0] * size
+    dp_tie   = [0.0] * size
+    parent   = [-1] * size  # -1 = "carried forward from capacity k-1".
+
+    for k in range(1, size):
+        # Start from the carry-forward option: no item placed at capacity k.
+        best_spent = dp_spent[k - 1]
+        best_tie   = dp_tie[k - 1]
+        best_item  = -1
+
+        for i in candidates:
+            p = prices_cents[i]
+            if p > k:
+                continue
+            cand_spent = dp_spent[k - p] + p
+            cand_tie   = dp_tie[k - p] + tie_score[i]
+            # Lexicographic comparison: (spent, tie) strictly greater.
+            if (
+                cand_spent > best_spent
+                or (cand_spent == best_spent and cand_tie > best_tie)
+            ):
+                best_spent = cand_spent
+                best_tie   = cand_tie
+                best_item  = i
+
+        dp_spent[k] = best_spent
+        dp_tie[k]   = best_tie
+        parent[k]   = best_item
+
+    # --- Backtracking: reconstruct per-asset extra-share counts --------------
+    extra = [0] * n
+    k = change_cents
+    while k > 0:
+        item = parent[k]
+        if item == -1:
+            # No item placed at capacity k: move one cent down.
+            k -= 1
+        else:
+            extra[item] += 1
+            k -= prices_cents[item]
+
+    # Apply the increments and compute the true leftover change in currency.
+    # The subtraction is performed entirely in integer cents to avoid
+    # floating-point drift; a single division by 100 converts back to
+    # currency units at the very end.
+    updated     = list(buy_quantities)
+    spent_cents = 0
+    for i in range(n):
+        updated[i] += extra[i]
+        spent_cents += extra[i] * prices_cents.get(i, 0)
+
+    remaining = (change_cents - spent_cents) / 100.0
+
     return updated, remaining

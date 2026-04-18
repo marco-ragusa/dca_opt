@@ -39,6 +39,7 @@ class Portfolio:
     only_buy: bool
     increment: float
     assets: list[Asset]
+    optimal_redistribute: bool = False
 
     def __post_init__(self) -> None:
         if self.increment < 0:
@@ -62,6 +63,7 @@ class Portfolio:
             {
                 "only_buy": true,
                 "increment": 1000,
+                "optimal_redistribute": false,
                 "portfolio": [
                     {
                         "ticker": "VWCE.DE",
@@ -71,6 +73,12 @@ class Portfolio:
                     }
                 ]
             }
+
+        The ``optimal_redistribute`` field is optional and defaults to ``False``
+        (backwards-compatible).  When ``True`` the pipeline uses the exact
+        knapsack-based redistribution in
+        :func:`rebalance.redistribute_change_optimal` instead of the greedy
+        :func:`rebalance.redistribute_change`.
 
         Args:
             path: Path to the JSON portfolio configuration file.
@@ -103,6 +111,7 @@ class Portfolio:
                 only_buy=bool(raw["only_buy"]),
                 increment=float(raw["increment"]),
                 assets=assets,
+                optimal_redistribute=bool(raw.get("optimal_redistribute", False)),
             )
         except KeyError as exc:
             raise ValueError(

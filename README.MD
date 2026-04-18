@@ -13,7 +13,9 @@ while keeping the portfolio as close as possible to the desired target allocatio
 3. **Calculate** optimal rebalance amounts based on target percentages.
 4. **Subtract** broker fees (never resulting in a negative purchase).
 5. **Convert** currency amounts to whole share quantities (floor division).
-6. **Redistribute** any leftover change among underweight assets.
+6. **Redistribute** any leftover change among eligible assets — either via a
+   fast greedy heuristic (default) or an exact knapsack DP that maximises
+   cash usage (opt-in via `optimal_redistribute`).
 7. **Print** the result sorted and filtered as requested.
 
 ---
@@ -58,6 +60,7 @@ Create a JSON file following this schema:
 {
     "only_buy": true,
     "increment": 1000,
+    "optimal_redistribute": false,
     "portfolio": [
         {
             "ticker": "VWCE.DE",
@@ -75,14 +78,38 @@ Create a JSON file following this schema:
 }
 ```
 
-| Field                | Type    | Description                                                  |
-|----------------------|---------|--------------------------------------------------------------|
-| `only_buy`           | bool    | If `true`, never sell — redistribute increment among underweight assets only |
-| `increment`          | float   | Cash to invest this period (e.g. monthly savings)            |
-| `ticker`             | string  | Yahoo Finance ticker symbol                                  |
-| `desired_percentage` | float   | Target allocation weight (all assets must sum to **100**)    |
-| `shares`             | float   | Shares currently held                                        |
-| `fees`               | float   | Broker fee per transaction (deducted from rebalance amount)  |
+| Field                   | Type    | Description                                                  |
+|-------------------------|---------|--------------------------------------------------------------|
+| `only_buy`              | bool    | If `true`, never sell — redistribute increment among underweight assets only |
+| `increment`             | float   | Cash to invest this period (e.g. monthly savings)            |
+| `optimal_redistribute`  | bool    | *(optional, default `false`)* Use the exact knapsack DP for the leftover-change step |
+| `ticker`                | string  | Yahoo Finance ticker symbol                                  |
+| `desired_percentage`    | float   | Target allocation weight (all assets must sum to **100**)    |
+| `shares`                | float   | Shares currently held                                        |
+| `fees`                  | float   | Broker fee per transaction (deducted from rebalance amount)  |
+
+### The `optimal_redistribute` Flag
+
+The final redistribution step can strand cash when share prices do not evenly
+divide the leftover.  Two algorithms are available:
+
+| Algorithm                        | Trade-off                                                                                                                              |
+|----------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
+| **Greedy** (default)             | O(n log n); fast but can leave cash unspent if the most-underweight asset's price does not divide the change evenly                    |
+| **Optimal knapsack DP** (opt-in) | O(n × c) in integer cents; exact max-spent with a deterministic tiebreaker that prefers more underweight assets                        |
+
+Both algorithms run in either `only_buy` mode.  The greedy path is also used
+as a fallback whenever `change_cents > MAX_CENTS` (~$10,000), regardless of
+which algorithm is configured, to bound memory and time usage.
+
+When `only_buy=true` the DP additionally **excludes already-overweight assets**
+from the candidate set: the buy-only promise "never push an asset further above
+its target" is preserved even during redistribution.  A small amount of leftover
+cash is preferred to pushing an overweight asset higher.
+
+When `only_buy=false` the DP runs over every asset with `buy > 0` and purely
+maximises cash usage (any overshoot can be corrected by selling on the next
+cycle).
 
 ---
 
@@ -120,7 +147,7 @@ python dca_opt.py --portfolio my_portfolio.json --sort buy --desc
             "current_percentage": 0.0,
             "desired_percentage": 60,
             "shares": 0,
-            "rebalance": 600.0,
+            "allocated": 600.0,
             "ticker_price": 118.42,
             "fees": 0,
             "buy": 5
@@ -131,7 +158,7 @@ python dca_opt.py --portfolio my_portfolio.json --sort buy --desc
             "current_percentage": 0.0,
             "desired_percentage": 40,
             "shares": 0,
-            "rebalance": 400.0,
+            "allocated": 400.0,
             "ticker_price": 23.18,
             "fees": 0,
             "buy": 17
@@ -147,5 +174,12 @@ python dca_opt.py --portfolio my_portfolio.json --sort buy --desc
 ## Running Tests
 
 ```bash
-python -m unittest rebalance/test_rebalance.py -v
+# Unit tests for the rebalance module (calculate_rebalance + both redistribution algorithms)
+python -m unittest rebalance.test_rebalance -v
+
+# Integration tests for the full pipeline (dca_opt.py, flag wiring, edge cases)
+python -m unittest test_dca_opt -v
+
+# Everything at once
+python -m unittest discover -v
 ```

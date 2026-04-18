@@ -39,8 +39,11 @@ def dca_opt(portfolio: Portfolio) -> dict:
         3. Compute optimal rebalance amounts to approach target allocations.
         4. Subtract broker fees from each allocation; clamp to zero.
         5. Convert currency amounts to whole share counts via floor division.
-        6. Redistribute leftover change among eligible underweight assets
-           (only_buy mode only).
+        6. Redistribute leftover change among eligible assets.  When
+           ``portfolio.optimal_redistribute`` is True the exact knapsack DP in
+           :func:`rebalance.redistribute_change_optimal` is used (in both
+           only_buy and allow-sell modes); otherwise the greedy
+           :func:`rebalance.redistribute_change` runs in only_buy mode only.
         7. Deduct executed broker fees from leftover change so that
            ``change`` reflects the true uninvested remainder.
 
@@ -61,7 +64,7 @@ def dca_opt(portfolio: Portfolio) -> dict:
 
     # 1. Fetch current prices (single batch network call)
     prices = market_data.get_prices(tickers)
-    ticker_prices = [prices[t] for t in tickers]
+    ticker_prices = [round(prices[t], 2) for t in tickers]
 
     # 2. Current values and allocation weights
     values = [s * p for s, p in zip(shares, ticker_prices)]
@@ -91,8 +94,19 @@ def dca_opt(portfolio: Portfolio) -> dict:
     total_fees = sum(f for f, b in zip(fees, buy_quantities) if b > 0)
     change = portfolio.increment - spent - total_fees
 
-    # 7. Redistribute the true leftover change (only_buy mode only)
-    if portfolio.only_buy:
+    # 7. Redistribute the true leftover change.
+    #    - optimal_redistribute=True  -> exact knapsack DP, applied in both
+    #      only_buy and allow-sell modes (handles the buy-only balance
+    #      constraint internally via its `only_buy` parameter).
+    #    - optimal_redistribute=False -> original greedy heuristic, kept for
+    #      backwards compatibility; only runs in only_buy mode as before.
+    if portfolio.optimal_redistribute:
+        buy_quantities, change = rebalance.redistribute_change_optimal(
+            portfolio.only_buy,
+            buy_quantities, ticker_prices,
+            current_pcts, desired_pcts, change,
+        )
+    elif portfolio.only_buy:
         buy_quantities, change = rebalance.redistribute_change(
             buy_quantities, ticker_prices, current_pcts, desired_pcts, change
         )
