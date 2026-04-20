@@ -89,8 +89,8 @@ def dca_opt(portfolio: Portfolio) -> dict:
     )
 
     # 4. Convert fees to absolute amounts, then subtract; clamp to zero.
-    #    For "percentage" fee_type: effective_fee = rebalance_amount * fee / 100.
-    #    For "fixed" fee_type:      effective_fee = fee (unchanged).
+    #    percentage_fee=True:  effective_fee = rebalance_amount * fee / 100.
+    #    percentage_fee=False: effective_fee = fee (unchanged).
     effective_fees = [
         _effective_fee(f, pct, r) if r > 0 else 0.0
         for f, pct, r in zip(fees, percentage_fees, rebalance_amounts)
