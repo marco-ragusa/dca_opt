@@ -240,6 +240,9 @@ def redistribute_change(
     Returns:
         A tuple of (updated buy quantities, remaining unallocated change).
     """
+    if change <= 0:
+        return list(buy_quantities), change
+
     # Step 1 – Compute priority ratio k_i = current_i / (desired_i + ε).
     # ε = 0.01 avoids division-by-zero when desired_i = 0.
     # A lower k_i means the asset is more underweight relative to its target.
