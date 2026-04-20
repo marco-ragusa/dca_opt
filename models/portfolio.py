@@ -13,6 +13,7 @@ class Asset:
     desired_percentage: float
     shares: float
     fees: float
+    percentage_fee: bool = False
 
     def __post_init__(self) -> None:
         if not self.ticker or not self.ticker.strip():
@@ -29,6 +30,11 @@ class Asset:
         if self.fees < 0:
             raise ValueError(
                 f"Asset '{self.ticker}': fees cannot be negative, got {self.fees}."
+            )
+        if self.percentage_fee and self.fees > 100:
+            raise ValueError(
+                f"Asset '{self.ticker}': percentage fee cannot exceed 100, "
+                f"got {self.fees}."
             )
 
 
@@ -69,10 +75,15 @@ class Portfolio:
                         "ticker": "VWCE.DE",
                         "desired_percentage": 60,
                         "shares": 10,
-                        "fees": 1.5
+                        "fees": 1.5,
+                        "percentage_fee": false
                     }
                 ]
             }
+
+        ``percentage_fee`` is optional and defaults to ``false`` (backwards-compatible).
+        Set it to ``true`` to express the fee as a percentage of the rebalance
+        allocation for that asset (0–100).
 
         The ``optimal_redistribute`` field is optional and defaults to ``False``
         (backwards-compatible).  When ``True`` the pipeline uses the exact
@@ -104,6 +115,7 @@ class Portfolio:
                     desired_percentage=float(item["desired_percentage"]),
                     shares=float(item["shares"]),
                     fees=float(item["fees"]),
+                    percentage_fee=bool(item.get("percentage_fee", False)),
                 )
                 for item in raw["portfolio"]
             ]

@@ -66,13 +66,15 @@ Create a JSON file following this schema:
             "ticker": "VWCE.DE",
             "desired_percentage": 60,
             "shares": 10,
-            "fees": 1.50
+            "fees": 0.5,
+            "percentage_fee": true
         },
         {
             "ticker": "VAGF.DE",
             "desired_percentage": 40,
             "shares": 5,
-            "fees": 1.50
+            "fees": 1.50,
+            "percentage_fee": false
         }
     ]
 }
@@ -86,7 +88,24 @@ Create a JSON file following this schema:
 | `ticker`                | string  | Yahoo Finance ticker symbol                                  |
 | `desired_percentage`    | float   | Target allocation weight (all assets must sum to **100**)    |
 | `shares`                | float   | Shares currently held                                        |
-| `fees`                  | float   | Broker fee per transaction (deducted from rebalance amount)  |
+| `percentage_fee`        | bool    | *(optional, default `false`)* `false` — flat amount per trade; `true` — % of rebalance allocation |
+| `fees`                  | float   | Broker fee: absolute amount when `percentage_fee` is `false`, or percentage 0–100 when `true` |
+
+### Fee types
+
+| `percentage_fee` | `fees` meaning        | Example                          |
+|------------------|-----------------------|----------------------------------|
+| `false`          | Flat amount per trade | `"fees": 1.50` → €1.50 deducted  |
+| `true`           | % of rebalance amount | `"fees": 0.5` → 0.5 % deducted   |
+
+For percentage fees the effective deduction is computed as:
+
+```
+effective_fee = rebalance_allocation × fees / 100
+net_investable = rebalance_allocation − effective_fee
+```
+
+The `fees` field in the output always shows the **effective absolute fee** actually paid for that transaction (i.e. the converted amount for percentage fees).
 
 ### The `optimal_redistribute` Flag
 

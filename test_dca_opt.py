@@ -25,6 +25,7 @@ def _portfolio(
             desired_percentage=d["desired_percentage"],
             shares=d.get("shares", 0.0),
             fees=d.get("fees", 0.0),
+            percentage_fee=d.get("percentage_fee", False),
         )
         for d in asset_defs
     ]
@@ -399,6 +400,118 @@ class TestPortfolioDefaults(unittest.TestCase):
             assets=[Asset(ticker="A", desired_percentage=100.0, shares=0, fees=0)],
         )
         self.assertFalse(p.optimal_redistribute)
+
+
+# ---------------------------------------------------------------------------
+# fee_type field — validation and pipeline behaviour
+# ---------------------------------------------------------------------------
+
+class TestAssetPercentageFeeValidation(unittest.TestCase):
+    """Unit tests for the percentage_fee field on Asset."""
+
+    def test_default_percentage_fee_is_false(self):
+        a = Asset(ticker="A", desired_percentage=100.0, shares=0, fees=0.0)
+        self.assertFalse(a.percentage_fee)
+
+    def test_percentage_fee_true_is_accepted(self):
+        a = Asset(ticker="A", desired_percentage=100.0, shares=0, fees=1.0, percentage_fee=True)
+        self.assertTrue(a.percentage_fee)
+
+    def test_percentage_fee_over_100_raises(self):
+        with self.assertRaises(ValueError):
+            Asset(ticker="A", desired_percentage=100.0, shares=0, fees=101.0, percentage_fee=True)
+
+    def test_percentage_fee_exactly_100_is_valid(self):
+        a = Asset(ticker="A", desired_percentage=100.0, shares=0, fees=100.0, percentage_fee=True)
+        self.assertTrue(a.percentage_fee)
+
+
+class TestPercentageFees(unittest.TestCase):
+    """Tests for assets with fee_type='percentage'."""
+
+    def test_percentage_fee_deducted_correctly(self):
+        """1 % fee on a 1000 increment → effective fee = 10.
+
+        gross alloc = 1000, effective_fee = 1000 * 1/100 = 10, net = 990
+        buy = floor(990/100) = 9, spent = 900
+        total_fees = 10, change = 1000 - 900 - 10 = 90
+        """
+        p = _portfolio(True, 1000.0, [
+            {"ticker": "A", "desired_percentage": 100.0, "shares": 0,
+             "fees": 1.0, "percentage_fee": True},
+        ])
+        out = _run(p, {"A": 100.0})
+
+        r = out["results"][0]
+        self.assertEqual(r["buy"], 9)
+        self.assertAlmostEqual(r["allocated"], 990.0, places=2)
+        self.assertAlmostEqual(out["total_fees"], 10.0, places=2)
+        self.assertAlmostEqual(out["change"], 90.0, places=2)
+
+    def test_percentage_fee_not_counted_when_buy_is_zero(self):
+        """Percentage fee on a buy=0 asset must not appear in total_fees.
+
+        A is overweight in only_buy mode → allocation = 0 → buy = 0 → fee = 0.
+        """
+        p = _portfolio(True, 100.0, [
+            {"ticker": "A", "desired_percentage": 10.0, "shares": 900,
+             "fees": 5.0, "percentage_fee": True},
+            {"ticker": "B", "desired_percentage": 90.0, "shares": 0,
+             "fees": 0.0},
+        ])
+        out = _run(p, {"A": 5.0, "B": 20.0})
+
+        by_ticker = {r["ticker"]: r for r in out["results"]}
+        self.assertEqual(by_ticker["A"]["buy"], 0)
+        self.assertAlmostEqual(out["total_fees"], 0.0, places=2)
+
+    def test_mixed_fee_types(self):
+        """One fixed-fee and one percentage-fee asset — correct totals.
+
+        increment=1000, A: 60 %, price=50, fee=3 (fixed)
+                         B: 40 %, price=100, fee=1 % (percentage)
+
+        gross_A=600, ef_A=3,         net_A=597, buy_A=floor(597/50)=11
+        gross_B=400, ef_B=400*1/100=4, net_B=396, buy_B=floor(396/100)=3
+        spent = 550 + 300 = 850
+        total_fees = 3 + 4 = 7
+        change = 1000 - 850 - 7 = 143
+        Redistribute (greedy, both current=0 → A first):
+            A: floor(143/50)=2 extra → remaining=43
+            B: floor(43/100)=0 extra
+        Final: buy_A=13, buy_B=3, change=43
+        """
+        p = _portfolio(True, 1000.0, [
+            {"ticker": "A", "desired_percentage": 60.0, "shares": 0,
+             "fees": 3.0, "percentage_fee": False},
+            {"ticker": "B", "desired_percentage": 40.0, "shares": 0,
+             "fees": 1.0, "percentage_fee": True},
+        ])
+        out = _run(p, {"A": 50.0, "B": 100.0})
+
+        by_ticker = {r["ticker"]: r for r in out["results"]}
+        self.assertEqual(by_ticker["A"]["buy"], 13)
+        self.assertEqual(by_ticker["B"]["buy"], 3)
+        self.assertAlmostEqual(out["total_fees"], 7.0, places=2)
+        self.assertAlmostEqual(out["change"], 43.0, places=2)
+
+    def test_percentage_fee_allow_sell(self):
+        """Percentage fee works correctly in allow-sell mode.
+
+        only_buy=False, increment=100, A: 100 %, shares=5, price=20, fee=2 %
+        current_value=100, gross_rebalance=100
+        ef_A = 100 * 2/100 = 2, net=98, buy=floor(98/20)=4
+        spent=80, total_fees=2, change=100-80-2=18
+        """
+        p = _portfolio(False, 100.0, [
+            {"ticker": "A", "desired_percentage": 100.0, "shares": 5.0,
+             "fees": 2.0, "percentage_fee": True},
+        ])
+        out = _run(p, {"A": 20.0})
+
+        self.assertEqual(out["results"][0]["buy"], 4)
+        self.assertAlmostEqual(out["total_fees"], 2.0, places=2)
+        self.assertAlmostEqual(out["change"], 18.0, places=2)
 
 
 if __name__ == "__main__":

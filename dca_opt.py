@@ -20,6 +20,17 @@ from models import Portfolio
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
+
+def _effective_fee(fee: float, percentage_fee: bool, rebalance_amount: float) -> float:
+    """Return the absolute fee for a single transaction.
+
+    When ``percentage_fee`` is True the fee is ``rebalance_amount * fee / 100``;
+    otherwise the flat amount is returned as-is.
+    """
+    if percentage_fee:
+        return rebalance_amount * fee / 100.0
+    return fee
+
 _SORT_CHOICES = [
     "id",
     "ticker",
@@ -61,6 +72,7 @@ def dca_opt(portfolio: Portfolio) -> dict:
     desired_pcts = [a.desired_percentage for a in portfolio.assets]
     shares = [a.shares for a in portfolio.assets]
     fees = [a.fees for a in portfolio.assets]
+    percentage_fees = [a.percentage_fee for a in portfolio.assets]
 
     # 1. Fetch current prices (single batch network call)
     prices = market_data.get_prices(tickers)
@@ -76,10 +88,16 @@ def dca_opt(portfolio: Portfolio) -> dict:
         portfolio.only_buy, portfolio.increment, values, desired_pcts
     )
 
-    # 4. Subtract broker fees; clamp to zero to prevent negative purchases
+    # 4. Convert fees to absolute amounts, then subtract; clamp to zero.
+    #    For "percentage" fee_type: effective_fee = rebalance_amount * fee / 100.
+    #    For "fixed" fee_type:      effective_fee = fee (unchanged).
+    effective_fees = [
+        _effective_fee(f, pct, r) if r > 0 else 0.0
+        for f, pct, r in zip(fees, percentage_fees, rebalance_amounts)
+    ]
     rebalance_amounts = [
-        max(0.0, r - f) if r > 0 else r
-        for r, f in zip(rebalance_amounts, fees)
+        max(0.0, r - ef) if r > 0 else r
+        for r, ef in zip(rebalance_amounts, effective_fees)
     ]
 
     # 5. Convert to whole share counts
@@ -91,7 +109,7 @@ def dca_opt(portfolio: Portfolio) -> dict:
     #    Note: redistribute_change only touches assets already scheduled for
     #    purchase (buy > 0), so total_fees is stable across redistribution.
     spent = sum(b * p for b, p in zip(buy_quantities, ticker_prices))
-    total_fees = sum(f for f, b in zip(fees, buy_quantities) if b > 0)
+    total_fees = sum(ef for ef, b in zip(effective_fees, buy_quantities) if b > 0)
     change = portfolio.increment - spent - total_fees
 
     # 7. Redistribute the true leftover change.
@@ -120,12 +138,12 @@ def dca_opt(portfolio: Portfolio) -> dict:
             "shares": share,
             "allocated": alloc,
             "ticker_price": price,
-            "fees": fee,
+            "fees": ef,
             "buy": qty,
         }
-        for i, (ticker, cur_pct, des_pct, share, alloc, price, fee, qty) in enumerate(
+        for i, (ticker, cur_pct, des_pct, share, alloc, price, ef, qty) in enumerate(
             zip(tickers, current_pcts, desired_pcts, shares,
-                rebalance_amounts, ticker_prices, fees, buy_quantities)
+                rebalance_amounts, ticker_prices, effective_fees, buy_quantities)
         )
     ]
 

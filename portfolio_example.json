@@ -7,13 +7,15 @@
             "ticker": "VWCE.DE",
             "desired_percentage": 60,
             "shares": 0,
-            "fees": 0
+            "fees": 0.5,
+            "percentage_fee": true
         },
         {
             "ticker": "VAGF.DE",
             "desired_percentage": 40,
             "shares": 10,
-            "fees": 0
+            "fees": 1.50,
+            "percentage_fee": false
         }
     ]
 }

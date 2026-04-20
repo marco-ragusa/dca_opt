@@ -336,7 +336,7 @@ def redistribute_change_optimal(
         Time  O(n * c),   space O(c),   where c = change_cents and n = |E|.
 
     Safety cap:
-        If ``change_cents`` exceeds :data:`MAX_CENTS` the function execute
+        If ``change_cents`` exceeds :data:`MAX_CENTS` the function executes
         a fallback and delegates to the greedy :func:`redistribute_change`.
         This prevents pathological memory/time usage on very large leftover
         amounts (the realistic DCA leftover is at most a few hundred euros).
