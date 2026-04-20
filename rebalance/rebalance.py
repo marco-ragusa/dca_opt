@@ -9,7 +9,7 @@
 MAX_CENTS: int = 1_000_000
 
 
-def validate_inputs(
+def _validate_inputs(
     values: list[float],
     percentages: list[float],
     increment: float,
@@ -170,7 +170,7 @@ def calculate_rebalance(
         Currency amounts to invest/divest per holding.
         In only_buy mode all amounts are >= 0.
     """
-    validate_inputs(values, percentages, increment)
+    _validate_inputs(values, percentages, increment)
 
     if only_buy:
         rebalances = _redistribute_proportional_to_gap(values, percentages, increment)
