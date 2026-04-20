@@ -355,11 +355,14 @@ def redistribute_change_optimal(
 
         Prices are expected to be pre-rounded to 2 decimal places at the
         call site (e.g. via ``round(price, 2)`` after fetching from the
-        market data provider) so that ``int(p * 100)`` is always exact.
+        market data provider).  ``round(p * 100)`` is used instead of
+        ``int(p * 100)`` because floats like ``118.42`` are not exactly
+        representable in binary: ``118.42 * 100`` can produce
+        ``11841.999...``, and truncation would yield the wrong cent count.
 
         ``prices_cents`` is built via a single walrus-operator pass over
         ``eligible``, simultaneously filtering by capacity and storing the
-        converted value — so ``int(ticker_prices[i] * 100)`` is computed
+        converted value — so ``round(ticker_prices[i] * 100)`` is computed
         exactly once per asset.  ``tie_score`` and ``candidates`` are then
         derived from the same dict, with no redundant work.
 
@@ -405,7 +408,7 @@ def redistribute_change_optimal(
         if not eligible:
             return list(buy_quantities), change
 
-    change_cents = int(change * 100)
+    change_cents = round(change * 100)
     if change_cents <= 0:
         return list(buy_quantities), change
 
@@ -417,7 +420,7 @@ def redistribute_change_optimal(
     prices_cents = {
         i: p
         for i in eligible
-        if 0 < (p := int(ticker_prices[i] * 100)) <= change_cents
+        if 0 < (p := round(ticker_prices[i] * 100)) <= change_cents
     }
     candidates = list(prices_cents.keys())
     if not candidates:
