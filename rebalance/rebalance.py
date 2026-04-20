@@ -226,7 +226,7 @@ def redistribute_change(
                if q_i^0 > 0:  x_i = floor(c_remaining / p_i)
                               c_remaining -= x_i · p_i
                else:          x_i = 0
-        4. Return updated quantities and c_remaining (rounded to 2 decimal places).
+        4. Return updated quantities and c_remaining.
 
     Complexity: O(n log n) dominated by the sort in step 2.
 
@@ -336,8 +336,8 @@ def redistribute_change_optimal(
         Time  O(n * c),   space O(c),   where c = change_cents and n = |E|.
 
     Safety cap:
-        If ``change_cents`` exceeds :data:`MAX_CENTS` the function logs a
-        warning and delegates to the greedy :func:`redistribute_change`.
+        If ``change_cents`` exceeds :data:`MAX_CENTS` the function execute
+        a fallback and delegates to the greedy :func:`redistribute_change`.
         This prevents pathological memory/time usage on very large leftover
         amounts (the realistic DCA leftover is at most a few hundred euros).
 
