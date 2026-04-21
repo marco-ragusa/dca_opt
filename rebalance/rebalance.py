@@ -4,7 +4,6 @@
 MAX_CENTS: int = 1_000_000
 
 
-
 def _redistribute_proportional_to_gap(
     values: list[float],
     percentages: list[float],

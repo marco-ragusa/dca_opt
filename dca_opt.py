@@ -51,8 +51,6 @@ def dca_opt(portfolio: Portfolio) -> dict:
     tickers = [a.ticker for a in portfolio.assets]
     desired_pcts = [a.desired_percentage for a in portfolio.assets]
     shares = [a.shares for a in portfolio.assets]
-    fees = [a.fees for a in portfolio.assets]
-    percentage_fees = [a.percentage_fee for a in portfolio.assets]
 
     prices = market_data.get_prices(tickers)
     ticker_prices = [round(prices[t], 2) for t in tickers]
@@ -70,8 +68,8 @@ def dca_opt(portfolio: Portfolio) -> dict:
     )
 
     effective_fees = [
-        _effective_fee(f, pct, r) if r > 0 else 0.0
-        for f, pct, r in zip(fees, percentage_fees, rebalance_amounts)
+        _effective_fee(a.fees, a.percentage_fee, r) if r > 0 else 0.0
+        for a, r in zip(portfolio.assets, rebalance_amounts)
     ]
     rebalance_amounts = [
         max(0.0, r - ef) if r > 0 else r
