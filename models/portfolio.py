@@ -108,6 +108,14 @@ class Portfolio:
         with json_path.open(encoding="utf-8") as fh:
             raw = json.load(fh)
 
+        def _require_bool(value: object, field: str) -> bool:
+            if not isinstance(value, bool):
+                raise ValueError(
+                    f"'{field}' must be a JSON boolean (true/false), "
+                    f"got {type(value).__name__!r}."
+                )
+            return value
+
         try:
             assets = [
                 Asset(
@@ -115,15 +123,19 @@ class Portfolio:
                     desired_percentage=float(item["desired_percentage"]),
                     shares=float(item["shares"]),
                     fees=float(item["fees"]),
-                    percentage_fee=bool(item.get("percentage_fee", False)),
+                    percentage_fee=_require_bool(
+                        item.get("percentage_fee", False), "percentage_fee"
+                    ),
                 )
                 for item in raw["portfolio"]
             ]
             return cls(
-                only_buy=bool(raw["only_buy"]),
+                only_buy=_require_bool(raw["only_buy"], "only_buy"),
                 increment=float(raw["increment"]),
                 assets=assets,
-                optimal_redistribute=bool(raw.get("optimal_redistribute", False)),
+                optimal_redistribute=_require_bool(
+                    raw.get("optimal_redistribute", False), "optimal_redistribute"
+                ),
             )
         except KeyError as exc:
             raise ValueError(
