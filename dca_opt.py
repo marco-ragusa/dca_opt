@@ -111,7 +111,7 @@ def dca_opt(portfolio: Portfolio) -> dict:
     #    purchase (buy > 0), so total_fees is stable across redistribution.
     spent = sum(b * p for b, p in zip(buy_quantities, ticker_prices))
     total_fees = sum(ef for ef, b in zip(effective_fees, buy_quantities) if b > 0)
-    change = portfolio.increment - spent - total_fees
+    change = round(portfolio.increment - spent - total_fees, 2)
 
     # 7. Redistribute the true leftover change.
     #    - optimal_redistribute=True  -> exact knapsack DP, both modes.
