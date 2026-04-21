@@ -32,6 +32,10 @@ def _fetch_single(ticker: str) -> float:
             history = yf.Ticker(ticker).history(period="1d")
             if not history.empty:
                 return float(history["Close"].iloc[-1])
+            logger.warning(
+                "Attempt %d/%d: empty history for '%s'.",
+                attempt, _FALLBACK_RETRIES, ticker,
+            )
             last_error = RuntimeError(f"Empty price history for ticker '{ticker}'.")
         except Exception as exc:
             last_error = exc
