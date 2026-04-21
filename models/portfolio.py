@@ -64,33 +64,6 @@ class Portfolio:
     def from_json(cls, path: str | Path) -> "Portfolio":
         """Load and validate a Portfolio from a JSON configuration file.
 
-        The JSON must follow this schema:
-
-            {
-                "only_buy": true,
-                "increment": 1000,
-                "optimal_redistribute": false,
-                "portfolio": [
-                    {
-                        "ticker": "VWCE.DE",
-                        "desired_percentage": 60,
-                        "shares": 10,
-                        "fees": 1.5,
-                        "percentage_fee": false
-                    }
-                ]
-            }
-
-        ``percentage_fee`` is optional and defaults to ``false`` (backwards-compatible).
-        Set it to ``true`` to express the fee as a percentage of the rebalance
-        allocation for that asset (0–100).
-
-        The ``optimal_redistribute`` field is optional and defaults to ``False``
-        (backwards-compatible).  When ``True`` the pipeline uses the exact
-        knapsack-based redistribution in
-        :func:`rebalance.redistribute_change_optimal` instead of the greedy
-        :func:`rebalance.redistribute_change`.
-
         Args:
             path: Path to the JSON portfolio configuration file.
 

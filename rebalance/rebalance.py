@@ -1,31 +1,8 @@
 """Core functions for portfolio rebalancing calculations."""
 
-# Upper bound (in cents) on the ``change`` for which the exact knapsack DP in
-# :func:`redistribute_change_optimal` is allowed to run.  Above this cap the
-# function silently falls back to the greedy :func:`redistribute_change` to
-# keep memory and time usage bounded.  1_000_000 cents = $10,000: well above
-# any realistic per-period leftover produced by a single DCA contribution
-# cycle.
+# DP safety cap: above this change (in cents) fall back to greedy to avoid O(n*c) blowup.
 MAX_CENTS: int = 1_000_000
 
-
-
-def _compute_target_rebalances(
-    values: list[float],
-    percentages: list[float],
-    total_value: float,
-) -> list[float]:
-    """Calculate how much each holding needs to change to reach its target allocation.
-
-    Args:
-        values: Current monetary values of each holding.
-        percentages: Target allocation percentages.
-        total_value: Target total portfolio value (current + increment) and > 0.
-
-    Returns:
-        List of signed rebalance amounts; positive means buy, negative means sell.
-    """
-    return [(total_value * (p / 100.0)) - v for p, v in zip(percentages, values)]
 
 
 def _redistribute_proportional_to_gap(
@@ -133,12 +110,9 @@ def calculate_rebalance(
         In only_buy mode all amounts are >= 0.
     """
     if only_buy:
-        rebalances = _redistribute_proportional_to_gap(values, percentages, increment)
-    else:
-        total_value = sum(values) + increment
-        rebalances = _compute_target_rebalances(values, percentages, total_value)
-
-    return rebalances
+        return _redistribute_proportional_to_gap(values, percentages, increment)
+    total_value = sum(values) + increment
+    return [(total_value * (p / 100.0)) - v for p, v in zip(percentages, values)]
 
 
 def redistribute_change(
@@ -203,20 +177,14 @@ def redistribute_change(
     if change <= 0:
         return list(buy_quantities), change
 
-    # Compute priority ratio k_i = current_i / (desired_i + ε).
-    # ε = 0.01 avoids division-by-zero when desired_i = 0.
-    # A lower k_i means the asset is more underweight relative to its target.
+    # ε avoids division-by-zero; lower ratio = more underweight = higher priority.
     epsilon = 0.01
     priorities = [
         current_percentages[i] / (desired_percentages[i] + epsilon)
         for i in range(len(buy_quantities))
     ]
-
-    # Sort asset indices ascending by k_i (most underweight first).
     sorted_indices = sorted(range(len(buy_quantities)), key=lambda i: priorities[i])
 
-    # Greedily assign extra shares to each eligible asset.
-    # x_i = floor(c_remaining / p_i); then reduce remaining change by x_i · p_i.
     updated = list(buy_quantities)
     remaining = change
     for i in sorted_indices:
@@ -226,7 +194,6 @@ def redistribute_change(
         remaining -= x_i * ticker_prices[i]
         updated[i] += x_i
 
-    # Return updated quantities and remaining change (caller rounds for display).
     return updated, remaining
 
 
@@ -305,29 +272,12 @@ def redistribute_change_optimal(
         amounts (the realistic DCA leftover is at most a few hundred euros).
 
     Float/cent conversion:
-        Prices and change are truncated to the nearest cent via ``int()``
-        rather than rounded.  Truncation is semantically consistent with the
-        floor-division logic used throughout the rebalancing pipeline: both
-        operations agree that only whole cents actually available should be
-        considered as capacity.  The final remaining change is computed
-        entirely in integer cents (``change_cents - spent_cents``) and
-        divided by 100 only once at the very end, minimising floating-point
-        drift.  This mirrors the approach of :func:`redistribute_change`,
-        which works directly in floats with ``//`` and ``*`` without any
-        intermediate rounding, and produces equally precise results.
-
-        Prices are expected to be pre-rounded to 2 decimal places at the
-        call site (e.g. via ``round(price, 2)`` after fetching from the
-        market data provider).  ``round(p * 100)`` is used instead of
-        ``int(p * 100)`` because floats like ``118.42`` are not exactly
-        representable in binary: ``118.42 * 100`` can produce
-        ``11841.999...``, and truncation would yield the wrong cent count.
-
-        ``prices_cents`` is built via a single walrus-operator pass over
-        ``eligible``, simultaneously filtering by capacity and storing the
-        converted value — so ``round(ticker_prices[i] * 100)`` is computed
-        exactly once per asset.  ``tie_score`` and ``candidates`` are then
-        derived from the same dict, with no redundant work.
+        ``round(x * 100)`` converts prices and change to integer cents.
+        ``round`` is required (not ``int``) because floats like ``118.42``
+        are not exactly representable in binary, so ``118.42 * 100`` can
+        produce ``11841.999...`` and truncation would yield a wrong cent count.
+        The final remainder is computed entirely in integer cents and divided
+        by 100 once at the very end to minimise floating-point drift.
 
     Args:
         only_buy: Selects the eligibility policy (see above).
@@ -372,9 +322,6 @@ def redistribute_change_optimal(
             return list(buy_quantities), change
 
     change_cents = round(change * 100)
-    if change_cents <= 0:
-        return list(buy_quantities), change
-
     prices_cents = {
         i: p
         for i in eligible
@@ -440,11 +387,11 @@ def redistribute_change_optimal(
             k -= prices_cents[item]
 
     # Integer-cent arithmetic avoids FP drift; single /100 at the end.
-    updated     = list(buy_quantities)
+    updated = list(buy_quantities)
     spent_cents = 0
-    for i in range(n):
+    for i in candidates:
         updated[i] += extra[i]
-        spent_cents += extra[i] * prices_cents.get(i, 0)
+        spent_cents += extra[i] * prices_cents[i]
 
     remaining = (change_cents - spent_cents) / 100.0
 

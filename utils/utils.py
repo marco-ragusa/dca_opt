@@ -4,30 +4,12 @@ import json
 
 
 def secure_division(numerator: float, denominator: float) -> float:
-    """Perform division, returning 0 when the denominator is falsy.
-
-    Args:
-        numerator: The dividend.
-        denominator: The divisor.
-
-    Returns:
-        numerator / denominator, or 0 if denominator is zero.
-    """
+    """Return numerator / denominator, or 0.0 when denominator is zero."""
     return numerator / denominator if denominator else 0.0
 
 
 def _format_floats(obj: object) -> object:
-    """Recursively replace every float with its ``{:.2f}`` string representation.
-
-    Applied only when building the display output; internal calculation values
-    are never modified.
-
-    Args:
-        obj: Any JSON-serialisable object (dict, list, float, int, str, …).
-
-    Returns:
-        A new object of the same shape with floats formatted to 2 decimal places.
-    """
+    """Recursively format floats to 2 decimal place strings for display."""
     if isinstance(obj, float):
         return f"{obj:.2f}"
     if isinstance(obj, dict):
@@ -55,7 +37,6 @@ def pretty_print(
         desc: When True, sort in descending order.
         only_buy: When True, exclude assets with a buy quantity of zero.
     """
-    # Sort and filter on raw values before formatting.
     if output["results"] and sort not in output["results"][0]:
         valid = sorted(output["results"][0].keys())
         raise ValueError(f"Sort key '{sort}' not found in results. Valid keys: {valid}")
