@@ -56,6 +56,9 @@ def pretty_print(
         only_buy: When True, exclude assets with a buy quantity of zero.
     """
     # Sort and filter on raw values before formatting.
+    if output["results"] and sort not in output["results"][0]:
+        valid = sorted(output["results"][0].keys())
+        raise ValueError(f"Sort key '{sort}' not found in results. Valid keys: {valid}")
     results = sorted(output["results"], key=lambda r: r[sort], reverse=desc)
 
     if only_buy:
