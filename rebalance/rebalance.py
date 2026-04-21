@@ -135,16 +135,13 @@ def _redistribute_proportional_to_gap(
         Allocation amounts per asset; overweight assets receive 0, underweight
         assets receive amounts summing exactly to increment.
     """
-    # Step 1 – Compute T and the rebalance gap g_i = T * (t_i / 100) - v_i.
     total_value = sum(values) + increment
     gaps = [(total_value * p / 100.0) - v for p, v in zip(percentages, values)]
 
-    # Step 2 – Sum positive gaps into S+.  If S+ == 0, no eligible asset exists.
     total_positive = sum(g for g in gaps if g > 0)
     if total_positive == 0:
         return [0.0] * len(values)
 
-    # Step 3 – Allocate proportionally: a_i = Delta * (g_i / S+) if g_i > 0.
     return [
         increment * (g / total_positive) if g > 0 else 0.0
         for g in gaps
@@ -243,7 +240,7 @@ def redistribute_change(
     if change <= 0:
         return list(buy_quantities), change
 
-    # Step 1 – Compute priority ratio k_i = current_i / (desired_i + ε).
+    # Compute priority ratio k_i = current_i / (desired_i + ε).
     # ε = 0.01 avoids division-by-zero when desired_i = 0.
     # A lower k_i means the asset is more underweight relative to its target.
     epsilon = 0.01
@@ -252,21 +249,21 @@ def redistribute_change(
         for i in range(len(buy_quantities))
     ]
 
-    # Step 2 – Sort asset indices ascending by k_i (most underweight first).
+    # Sort asset indices ascending by k_i (most underweight first).
     sorted_indices = sorted(range(len(buy_quantities)), key=lambda i: priorities[i])
 
-    # Step 3 – Greedily assign extra shares to each eligible asset.
+    # Greedily assign extra shares to each eligible asset.
     # x_i = floor(c_remaining / p_i); then reduce remaining change by x_i · p_i.
     updated = list(buy_quantities)
     remaining = change
     for i in sorted_indices:
-        if updated[i] <= 0:             # eligibility: skip assets not in this buy round
+        if updated[i] <= 0:
             continue
-        x_i = int(remaining // ticker_prices[i])     # floor(c_remaining / p_i)
+        x_i = int(remaining // ticker_prices[i])
         remaining -= x_i * ticker_prices[i]
         updated[i] += x_i
 
-    # Step 4 – Return updated quantities and remaining change (caller rounds for display).
+    # Return updated quantities and remaining change (caller rounds for display).
     return updated, remaining
 
 
@@ -415,11 +412,6 @@ def redistribute_change_optimal(
     if change_cents <= 0:
         return list(buy_quantities), change
 
-    # Build prices_cents in a single pass using the walrus operator (:=):
-    # int(ticker_prices[i] * 100) is computed exactly once per asset and
-    # immediately used both as the filter condition and as the dict value,
-    # eliminating the redundant second calculation that a separate candidates
-    # list + dict comprehension would require.
     prices_cents = {
         i: p
         for i in eligible
@@ -437,9 +429,6 @@ def redistribute_change_optimal(
             current_percentages, desired_percentages, change,
         )
 
-    # Per-candidate tiebreaker weight: positive = underweight (to be preferred).
-    # Computed only for confirmed candidates, avoiding redundant work on
-    # ineligible assets.
     tie_score = {
         i: desired_percentages[i] - current_percentages[i]
         for i in candidates
@@ -452,7 +441,6 @@ def redistribute_change_optimal(
     parent   = [-1] * size  # -1 = "carried forward from capacity k-1".
 
     for k in range(1, size):
-        # Start from the carry-forward option: no item placed at capacity k.
         best_spent = dp_spent[k - 1]
         best_tie   = dp_tie[k - 1]
         best_item  = -1
@@ -488,10 +476,7 @@ def redistribute_change_optimal(
             extra[item] += 1
             k -= prices_cents[item]
 
-    # Apply the increments and compute the true leftover change in currency.
-    # The subtraction is performed entirely in integer cents to avoid
-    # floating-point drift; a single division by 100 converts back to
-    # currency units at the very end.
+    # Integer-cent arithmetic avoids FP drift; single /100 at the end.
     updated     = list(buy_quantities)
     spent_cents = 0
     for i in range(n):

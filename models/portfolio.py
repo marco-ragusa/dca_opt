@@ -145,3 +145,18 @@ class Portfolio:
             raise ValueError(
                 f"Invalid value in portfolio JSON: {exc}"
             ) from exc
+
+
+@dataclass
+class AssetResult:
+    """Per-asset output produced by dca_opt()."""
+
+    id: int
+    ticker: str
+    current_percentage: float
+    desired_percentage: float
+    shares: float
+    allocated: float
+    ticker_price: float
+    fees: float
+    buy: int

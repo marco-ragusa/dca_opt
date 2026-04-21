@@ -10,26 +10,24 @@ Usage:
 """
 
 import argparse
+import dataclasses
 import logging
 from pathlib import Path
 
 import market_data
 import rebalance
 import utils
-from models import Portfolio
+from models import AssetResult, Portfolio
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
 
 def _effective_fee(fee: float, percentage_fee: bool, rebalance_amount: float) -> float:
-    """Return the absolute fee for a single transaction.
-
-    When ``percentage_fee`` is True the fee is ``rebalance_amount * fee / 100``;
-    otherwise the flat amount is returned as-is.
-    """
+    """Return the absolute fee for a single transaction."""
     if percentage_fee:
         return rebalance_amount * fee / 100.0
     return fee
+
 
 _SORT_CHOICES = [
     "id",
@@ -44,30 +42,11 @@ _SORT_CHOICES = [
 def dca_opt(portfolio: Portfolio) -> dict:
     """Compute optimal buy quantities for each asset in a portfolio.
 
-    Steps:
-        1. Fetch current market prices in a single batch request.
-        2. Calculate each asset's current monetary value and allocation weight.
-        3. Compute optimal rebalance amounts to approach target allocations.
-        4. Subtract broker fees from each allocation; clamp to zero.
-        5. Convert currency amounts to whole share counts via floor division.
-        6. Redistribute leftover change among eligible assets.  When
-           ``portfolio.optimal_redistribute`` is True the exact knapsack DP in
-           :func:`rebalance.redistribute_change_optimal` is used; otherwise the
-           greedy :func:`rebalance.redistribute_change` runs.  Both algorithms
-           apply in both only_buy and allow-sell modes, touching only assets
-           already scheduled for purchase (``buy > 0``).
-        7. Deduct executed broker fees from leftover change so that
-           ``change`` reflects the true uninvested remainder.
-
     Args:
         portfolio: A fully validated Portfolio instance.
 
     Returns:
-        A dict with keys:
-            'results'    -- list of per-asset dicts (field 'allocated' holds
-                            the fee-adjusted target amount for that asset),
-            'total_fees' -- sum of fees paid for all executed purchases,
-            'change'     -- leftover cash after shares and fees are deducted.
+        A dict with keys 'results' (list of per-asset dicts), 'total_fees', 'change'.
     """
     tickers = [a.ticker for a in portfolio.assets]
     desired_pcts = [a.desired_percentage for a in portfolio.assets]
@@ -75,23 +54,21 @@ def dca_opt(portfolio: Portfolio) -> dict:
     fees = [a.fees for a in portfolio.assets]
     percentage_fees = [a.percentage_fee for a in portfolio.assets]
 
-    # 1. Fetch current prices (single batch network call)
     prices = market_data.get_prices(tickers)
     ticker_prices = [round(prices[t], 2) for t in tickers]
 
-    # 2. Current values and allocation weights
+    for ticker, price in zip(tickers, ticker_prices):
+        if price <= 0:
+            raise ValueError(f"Invalid price for '{ticker}': {price}. Prices must be positive.")
+
     values = [s * p for s, p in zip(shares, ticker_prices)]
     total_value = sum(values)
     current_pcts = [utils.secure_division(v * 100.0, total_value) for v in values]
 
-    # 3. Optimal rebalance amounts (in portfolio currency)
     rebalance_amounts = rebalance.calculate_rebalance(
         portfolio.only_buy, portfolio.increment, values, desired_pcts
     )
 
-    # 4. Convert fees to absolute amounts, then subtract; clamp to zero.
-    #    percentage_fee=True:  effective_fee = rebalance_amount * fee / 100.
-    #    percentage_fee=False: effective_fee = fee (unchanged).
     effective_fees = [
         _effective_fee(f, pct, r) if r > 0 else 0.0
         for f, pct, r in zip(fees, percentage_fees, rebalance_amounts)
@@ -101,23 +78,12 @@ def dca_opt(portfolio: Portfolio) -> dict:
         for r, ef in zip(rebalance_amounts, effective_fees)
     ]
 
-    # 5. Convert to whole share counts
     buy_quantities: list[int] = [int(r // p) for r, p in zip(rebalance_amounts, ticker_prices)]
 
-    # 6. Deduct fees before redistribution so that fee-reserved cash is never
-    #    handed to redistribute_change (which would otherwise spend it on shares,
-    #    pushing the final change negative).
-    #    Note: redistribute_change only touches assets already scheduled for
-    #    purchase (buy > 0), so total_fees is stable across redistribution.
     spent = sum(b * p for b, p in zip(buy_quantities, ticker_prices))
     total_fees = sum(ef for ef, b in zip(effective_fees, buy_quantities) if b > 0)
     change = round(portfolio.increment - spent - total_fees, 2)
 
-    # 7. Redistribute the true leftover change.
-    #    - optimal_redistribute=True  -> exact knapsack DP, both modes.
-    #    - optimal_redistribute=False -> greedy heuristic, both modes.
-    #    Both algorithms touch only assets with buy > 0, so allow-sell
-    #    orders (buy <= 0) are never affected.
     if portfolio.optimal_redistribute:
         buy_quantities, change = rebalance.redistribute_change_optimal(
             portfolio.only_buy,
@@ -130,17 +96,17 @@ def dca_opt(portfolio: Portfolio) -> dict:
         )
 
     results = [
-        {
-            "id": i,
-            "ticker": ticker,
-            "current_percentage": cur_pct,
-            "desired_percentage": des_pct,
-            "shares": share,
-            "allocated": alloc,
-            "ticker_price": price,
-            "fees": ef,
-            "buy": qty,
-        }
+        dataclasses.asdict(AssetResult(
+            id=i,
+            ticker=ticker,
+            current_percentage=cur_pct,
+            desired_percentage=des_pct,
+            shares=share,
+            allocated=alloc,
+            ticker_price=price,
+            fees=ef if qty > 0 else 0.0,
+            buy=qty,
+        ))
         for i, (ticker, cur_pct, des_pct, share, alloc, price, ef, qty) in enumerate(
             zip(tickers, current_pcts, desired_pcts, shares,
                 rebalance_amounts, ticker_prices, effective_fees, buy_quantities)
