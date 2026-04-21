@@ -63,37 +63,6 @@ class TestCalculateRebalance(unittest.TestCase):
         self.assertEqual(calculate_rebalance(True, 500, [1000], [100]), [500.0])
         self.assertEqual(calculate_rebalance(False, 500, [1000], [100]), [500.0])
 
-    # Input validation
-
-    def test_negative_increment_raises(self):
-        with self.assertRaises(ValueError):
-            calculate_rebalance(False, -10, [100], [100])
-
-    def test_percentages_not_summing_to_100_raises(self):
-        with self.assertRaises(ValueError):
-            calculate_rebalance(False, 100, [100], [50])
-
-    def test_length_mismatch_raises(self):
-        with self.assertRaises(ValueError):
-            calculate_rebalance(False, 100, [100], [50, 50])
-
-    def test_empty_lists_raise_explicit_error(self):
-        """Empty lists must raise ValueError with a clear message (not a sum-to-100 error)."""
-        with self.assertRaises(ValueError) as ctx:
-            calculate_rebalance(False, 100, [], [])
-        self.assertIn("empty", str(ctx.exception).lower())
-
-    def test_non_numeric_values_raise(self):
-        with self.assertRaises(ValueError):
-            calculate_rebalance(False, 100, ["a", 100], [50, 50])
-
-    def test_non_numeric_percentages_raise(self):
-        with self.assertRaises(ValueError):
-            calculate_rebalance(False, 100, [100, 100], ["b", 50])
-
-    def test_non_numeric_increment_raises(self):
-        with self.assertRaises(ValueError):
-            calculate_rebalance(False, "100", [100], [100])
 
 
 class TestRedistributeChange(unittest.TestCase):

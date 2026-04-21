@@ -9,41 +9,6 @@
 MAX_CENTS: int = 1_000_000
 
 
-def _validate_inputs(
-    values: list[float],
-    percentages: list[float],
-    increment: float,
-) -> None:
-    """Validate all inputs required for a rebalancing calculation.
-
-    Args:
-        values: Current monetary values of each portfolio holding.
-        percentages: Target allocation percentages for each holding.
-        increment: Additional cash amount available for investment.
-
-    Raises:
-        ValueError: If any input violates the expected constraints.
-    """
-    if not values or not percentages:
-        raise ValueError("Values and percentages cannot be empty.")
-    if not isinstance(increment, (int, float)) or increment < 0:
-        raise ValueError(
-            f"Increment must be a non-negative number, got {increment!r}."
-        )
-    if len(values) != len(percentages):
-        raise ValueError(
-            f"Values and percentages must have the same length "
-            f"({len(values)} vs {len(percentages)})."
-        )
-    if not all(isinstance(v, (int, float)) for v in values):
-        raise ValueError("All values must be numeric.")
-    if not all(isinstance(p, (int, float)) for p in percentages):
-        raise ValueError("All percentages must be numeric.")
-    if round(sum(percentages), 2) != 100.0:
-        raise ValueError(
-            f"Percentages must sum to 100.00, got {sum(percentages):.2f}."
-        )
-
 
 def _compute_target_rebalances(
     values: list[float],
@@ -167,8 +132,6 @@ def calculate_rebalance(
         Currency amounts to invest/divest per holding.
         In only_buy mode all amounts are >= 0.
     """
-    _validate_inputs(values, percentages, increment)
-
     if only_buy:
         rebalances = _redistribute_proportional_to_gap(values, percentages, increment)
     else:
