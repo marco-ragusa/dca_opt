@@ -268,13 +268,12 @@ class TestChange(unittest.TestCase):
         self.assertEqual(out["total_fees"], 5.0)
         self.assertEqual(out["change"], 45.0)
 
-    def test_only_buy_false_no_redistribution_change_pure(self):
-        """In allow-sell mode redistribution is skipped; change is rounding + fee.
+    def test_only_buy_false_change_when_price_exceeds_leftover(self):
+        """In allow-sell mode, change stays when no eligible share fits.
 
         increment=200, A: desired=100 %, shares=0, price=150, fee=0
-            new_total = 200, delta = 200
-            buy = floor(200/150) = 1, spent = 150
-            change = 200 - 150 - 0 = 50
+            buy = floor(200/150) = 1, spent = 150, change = 50
+            redistribute: floor(50/150) = 0 extra -> change stays 50
         """
         p = _portfolio(False, 200.0, [
             {"ticker": "A", "desired_percentage": 100.0, "shares": 0, "fees": 0.0},
@@ -283,6 +282,29 @@ class TestChange(unittest.TestCase):
 
         self.assertEqual(out["results"][0]["buy"], 1)
         self.assertEqual(out["change"], 50.0)
+
+    def test_only_buy_false_greedy_redistributes_change(self):
+        """In allow-sell mode, greedy redistribution runs when change covers a price.
+
+        increment=100, A: 60 %, price=13; B: 40 %, price=17 (both new)
+            buy_A = floor(60/13) = 4  (spent=52)
+            buy_B = floor(40/17) = 2  (spent=34)
+            change = 100 - 52 - 34 = 14
+            Greedy (both current=0, same priority, A first by stable sort):
+                A: floor(14/13) = 1 extra -> remaining = 1
+                B: floor(1/17)  = 0 extra
+            Final: buy_A=5, buy_B=2, change=1
+        """
+        p = _portfolio(False, 100.0, [
+            {"ticker": "A", "desired_percentage": 60.0, "shares": 0, "fees": 0.0},
+            {"ticker": "B", "desired_percentage": 40.0, "shares": 0, "fees": 0.0},
+        ])
+        out = _run(p, {"A": 13.0, "B": 17.0})
+
+        by_ticker = {r["ticker"]: r for r in out["results"]}
+        self.assertEqual(by_ticker["A"]["buy"], 5)
+        self.assertEqual(by_ticker["B"]["buy"], 2)
+        self.assertEqual(out["change"], 1.0)
 
 
 # ---------------------------------------------------------------------------
@@ -333,12 +355,11 @@ class TestOptimalRedistributeFlag(unittest.TestCase):
         self.assertLessEqual(out_optimal["change"], out_greedy["change"])
 
     def test_flag_on_applies_in_allow_sell_mode(self):
-        """The flag also triggers the DP when only_buy=False.
+        """The flag triggers the DP (instead of greedy) when only_buy=False.
 
-        In the legacy pipeline redistribution is skipped entirely with
-        only_buy=False.  With the flag on the DP is called; for this simple
-        setup (price > change) it cannot improve, so the change stays 10
-        -- but the code path is exercised and the result is sane.
+        With optimal_redistribute=True the DP is called; for this simple
+        setup (price > change) neither algorithm can improve, so the change
+        stays 10 -- but the DP code path is exercised and the result is sane.
 
         Setup:
             only_buy=False, increment=100, A: desired=100 %, price=30.
