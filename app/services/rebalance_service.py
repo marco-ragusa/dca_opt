@@ -1,6 +1,10 @@
 """Orchestration of the DCA rebalancing flow."""
 
+from decimal import ROUND_DOWN, Decimal
+
 from app import rebalance
+
+_CENT = Decimal("0.01")
 from app.market_data.base import AbstractMarketDataProvider
 from app.schemas.request import RebalanceRequest
 from app.schemas.result import RebalanceResponse
@@ -60,7 +64,7 @@ def run_rebalance(
 
     spent = sum(b * p for b, p in zip(buy_quantities, ticker_prices))
     total_fees = sum(ef for ef, b in zip(effective_fees, buy_quantities) if b > 0)
-    change = int((request.increment - spent - total_fees) * 100) / 100
+    change = float(Decimal(str(request.increment - spent - total_fees)).quantize(_CENT, rounding=ROUND_DOWN))
 
     if request.optimal_redistribute:
         buy_quantities, change = rebalance.redistribute_change_optimal(
