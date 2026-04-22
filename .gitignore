@@ -23,3 +23,9 @@ portfolios/
 
 # VS Code
 .vscode/
+
+# Pytest
+.pytest_cache/
+
+# Environment variables
+.env
