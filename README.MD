@@ -40,7 +40,10 @@ dca_opt/
 │   │   └── rebalance_service.py       # Core orchestration logic
 │   ├── market_data/
 │   │   ├── base.py                    # AbstractMarketDataProvider (ABC)
-│   │   └── yfinance_provider.py       # yfinance batch + fallback retry
+│   │   ├── yfinance_provider.py       # yfinance batch + fallback retry
+│   │   ├── cache.py                   # AbstractCache + LocalCache (in-memory, TTL)
+│   │   ├── redis_cache.py             # RedisCache (lazy import, per cluster)
+│   │   └── cached_provider.py         # CachedMarketDataProvider (decorator)
 │   ├── core/
 │   │   ├── config.py                  # Settings via pydantic-settings
 │   │   ├── exceptions.py              # Custom exception handlers
@@ -306,6 +309,9 @@ Copy `.env.example` to `.env` and adjust as needed:
 LOG_LEVEL=INFO
 ```
 
-| Variable    | Default | Description                                               |
-|-------------|---------|-----------------------------------------------------------|
-| `LOG_LEVEL` | `INFO`  | Python logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`) |
+| Variable             | Default                       | Description                                               |
+|----------------------|-------------------------------|-----------------------------------------------------------|
+| `LOG_LEVEL`          | `INFO`                        | Python logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`) |
+| `CACHE_BACKEND`      | `local`                       | `local` — in-memory per process; `redis` — shared across workers |
+| `CACHE_TTL_SECONDS`  | `300`                         | Price cache TTL in seconds (5 minutes)                    |
+| `REDIS_URL`          | `redis://localhost:6379/0`    | Redis connection URL (used only when `CACHE_BACKEND=redis`) |
