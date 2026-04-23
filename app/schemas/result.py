@@ -1,14 +1,8 @@
 """Pydantic v2 schemas for the HTTP response boundary."""
 
-from decimal import ROUND_DOWN, Decimal
-
 from pydantic import BaseModel, field_serializer
 
-_CENT = Decimal("0.01")
-
-
-def _truncate2(v: float) -> float:
-    return float(Decimal(str(v)).quantize(_CENT, rounding=ROUND_DOWN))
+from app.core.formatting import truncate2
 
 
 class AssetResultOut(BaseModel):
@@ -27,7 +21,7 @@ class AssetResultOut(BaseModel):
         "allocated", "ticker_price", "fees",
     )
     def _fmt(self, v: float) -> float:
-        return _truncate2(v)
+        return truncate2(v)
 
 
 class RebalanceResponse(BaseModel):
@@ -37,4 +31,4 @@ class RebalanceResponse(BaseModel):
 
     @field_serializer("total_fees", "change")
     def _fmt(self, v: float) -> float:
-        return _truncate2(v)
+        return truncate2(v)
