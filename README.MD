@@ -43,16 +43,17 @@ dca_opt/
 │   │   └── yfinance_provider.py       # yfinance batch + fallback retry
 │   ├── core/
 │   │   ├── config.py                  # Settings via pydantic-settings
-│   │   ├── log_config.py              # Logging setup
-│   │   └── exceptions.py              # Custom exception handlers
+│   │   ├── exceptions.py              # Custom exception handlers
+│   │   ├── formatting.py              # Shared numeric truncation helper
+│   │   └── log_config.py              # Logging setup
 │   │
 │   └── rebalance/
-│       ├── rebalance.py               # Core algorithms (DP + greedy)
-│       └── test_rebalance.py          # Unit tests for core algorithms
+│       └── rebalance.py               # Core algorithms (DP + greedy)
 │
 ├── tests/
 │   ├── conftest.py
 │   ├── unit/
+│   │   ├── test_rebalance_core.py
 │   │   ├── test_rebalance_service.py
 │   │   └── test_schema_validation.py
 │   └── integration/
