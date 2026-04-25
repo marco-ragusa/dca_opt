@@ -9,6 +9,7 @@ from app.market_data.cached_provider import CachedMarketDataProvider
 from app.market_data.yfinance_provider import YFinanceProvider
 
 
+@lru_cache(maxsize=1)
 def _build_cache() -> AbstractCache:
     if settings.cache_backend == "redis":
         if not settings.redis_url:
