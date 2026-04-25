@@ -1,6 +1,7 @@
 """Orchestration of the DCA rebalancing flow."""
 
 from app import rebalance
+from app.core.exceptions import MarketDataError
 from app.core.formatting import truncate2
 from app.market_data.base import AbstractMarketDataProvider
 from app.schemas.request import RebalanceRequest
@@ -32,7 +33,10 @@ def run_rebalance(
     shares = [a.shares for a in request.assets]
 
     prices = market_provider.get_prices(tickers)
-    ticker_prices = [round(prices[t], 2) for t in tickers]
+    try:
+        ticker_prices = [round(prices[t], 2) for t in tickers]
+    except KeyError as exc:
+        raise MarketDataError(f"Price missing for ticker {exc}.") from exc
 
     for ticker, price in zip(tickers, ticker_prices):
         if price <= 0:

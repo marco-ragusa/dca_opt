@@ -11,6 +11,11 @@ from app.market_data.yfinance_provider import YFinanceProvider
 
 def _build_cache() -> AbstractCache:
     if settings.cache_backend == "redis":
+        if not settings.redis_url:
+            raise ValueError(
+                "REDIS_URL must be set when CACHE_BACKEND=redis. "
+                "Pass it as an environment variable."
+            )
         from app.market_data.redis_cache import RedisCache
         return RedisCache(url=settings.redis_url, ttl_seconds=settings.cache_ttl_seconds)
     return LocalCache(ttl_seconds=settings.cache_ttl_seconds)

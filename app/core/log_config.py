@@ -7,6 +7,6 @@ from app.core.config import settings
 
 def setup_logging() -> None:
     logging.basicConfig(
-        level=getattr(logging, settings.log_level.upper(), logging.INFO),
+        level=settings.log_level,
         format="%(levelname)s: %(name)s: %(message)s",
     )
