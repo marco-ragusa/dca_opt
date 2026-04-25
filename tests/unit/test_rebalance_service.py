@@ -334,3 +334,28 @@ def test_percentage_fee_allow_sell():
     assert out.results[0].buy == 4
     assert out.total_fees == pytest.approx(2.0, abs=0.01)
     assert out.change == pytest.approx(18.0, abs=0.01)
+
+
+# ---------------------------------------------------------------------------
+# Error handling tests
+# ---------------------------------------------------------------------------
+
+def test_missing_ticker_in_prices_raises_market_data_error():
+    """get_prices returning a partial dict raises MarketDataError."""
+    from app.core.exceptions import MarketDataError
+    req = _request(True, 100.0, [
+        {"ticker": "A", "desired_percentage": 60.0, "shares": 0, "fees": 0},
+        {"ticker": "B", "desired_percentage": 40.0, "shares": 0, "fees": 0},
+    ])
+    with pytest.raises(MarketDataError, match="Price missing for ticker"):
+        _run(req, {"A": 50.0})
+
+
+def test_zero_price_raises_market_data_error():
+    """A zero price from the provider raises MarketDataError."""
+    from app.core.exceptions import MarketDataError
+    req = _request(True, 100.0, [
+        {"ticker": "A", "desired_percentage": 100.0, "shares": 0, "fees": 0},
+    ])
+    with pytest.raises(MarketDataError, match="Invalid price"):
+        _run(req, {"A": 0.0})

@@ -40,7 +40,7 @@ def run_rebalance(
 
     for ticker, price in zip(tickers, ticker_prices):
         if price <= 0:
-            raise ValueError(
+            raise MarketDataError(
                 f"Invalid price for '{ticker}': {price}. Prices must be positive."
             )
 
