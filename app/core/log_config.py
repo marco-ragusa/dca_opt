@@ -2,12 +2,12 @@
 
 import logging
 
-from app.core.config import settings
+from app.core.config import get_settings
 
 
 def setup_logging() -> None:
     logging.basicConfig(
-        level=settings.log_level,
+        level=get_settings().log_level,
         format="%(levelname)s: %(name)s: %(message)s",
         force=True,
     )

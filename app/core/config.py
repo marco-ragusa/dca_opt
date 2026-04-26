@@ -1,5 +1,6 @@
 """Application settings loaded from environment variables."""
 
+from functools import lru_cache
 from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -14,4 +15,6 @@ class Settings(BaseSettings):
     redis_url: str | None = None
 
 
-settings = Settings()
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+    return Settings()
