@@ -2,12 +2,12 @@
 
 import unittest
 
-from rebalance import (
+from app.rebalance import (
     calculate_rebalance,
     redistribute_change,
     redistribute_change_optimal,
 )
-from rebalance.rebalance import MAX_CENTS
+from app.rebalance.rebalance import MAX_CENTS
 
 
 class TestCalculateRebalance(unittest.TestCase):
