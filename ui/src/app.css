@@ -118,7 +118,8 @@ input[type='number'] { -moz-appearance: textfield; }
   border: 1px solid var(--border);
   padding: 0.3rem 0.75rem;
 }
-.btn-ghost:hover { color: var(--text); border-color: var(--border-hover); }
+.btn-ghost:hover:not(:disabled) { color: var(--text); border-color: var(--border-hover); }
+.btn-ghost:disabled { opacity: 0.4; }
 
 .btn-icon { padding: 0.3rem 0.4rem; }
 
