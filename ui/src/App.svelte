@@ -200,6 +200,7 @@
 />
 
 <Header
+  exportDisabled={assets.length === 0}
   on:requestImport={handleImportRequest}
   on:requestExport={handleExport}
 />

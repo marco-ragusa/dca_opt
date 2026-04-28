@@ -1,6 +1,8 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
 
+  export let exportDisabled = false;
+
   const dispatch = createEventDispatcher<{
     requestImport: void;
     requestExport: void;
@@ -13,7 +15,7 @@
     <div style="flex: 1;"></div>
     <div style="display: flex; gap: 6px; flex-shrink: 0;">
       <button type="button" class="btn btn-ghost" on:click={() => dispatch('requestImport')}>Import</button>
-      <button type="button" class="btn btn-ghost" on:click={() => dispatch('requestExport')}>Export</button>
+      <button type="button" class="btn btn-ghost" on:click={() => dispatch('requestExport')} disabled={exportDisabled}>Export</button>
     </div>
   </div>
 </header>
