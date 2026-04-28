@@ -2,8 +2,8 @@
   import { onMount } from 'svelte';
   import type { Asset, Settings, RebalanceResponse, PortfolioExport } from './types';
   import {
-    loadSettings, loadAssets, loadLandingCollapsed,
-    saveSettings, saveAssets, saveLandingCollapsed,
+    loadSettings, loadAssets, loadLandingCollapsed, loadDarkMode,
+    saveSettings, saveAssets, saveLandingCollapsed, saveDarkMode,
     DEFAULT_SETTINGS,
   } from './storage';
 
@@ -19,6 +19,7 @@
   let error: string | null = null;
   let loading = false;
   let landingCollapsed = false;
+  let dark = false;
 
   let fileInput: HTMLInputElement;
 
@@ -26,6 +27,8 @@
     settings = loadSettings();
     assets = loadAssets();
     landingCollapsed = loadLandingCollapsed();
+    dark = loadDarkMode();
+    document.documentElement.classList.toggle('dark', dark);
   });
 
   function updateSettings(patch: Partial<Settings>) {
@@ -119,6 +122,12 @@
     fileInput.click();
   }
 
+  function handleToggleDark() {
+    dark = !dark;
+    document.documentElement.classList.toggle('dark', dark);
+    saveDarkMode(dark);
+  }
+
   function handleFileChange(e: Event) {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (!file) return;
@@ -201,8 +210,10 @@
 
 <Header
   exportDisabled={assets.length === 0}
+  {dark}
   on:requestImport={handleImportRequest}
   on:requestExport={handleExport}
+  on:toggleDark={handleToggleDark}
 />
 
 <main style="max-width: 896px; margin: 0 auto; padding: 36px 20px 64px; display: flex; flex-direction: column; gap: 36px;">
