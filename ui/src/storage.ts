@@ -4,6 +4,7 @@ const KEYS = {
   settings: 'dca_opt_settings',
   assets: 'dca_opt_assets',
   landingCollapsed: 'dca_opt_landing_collapsed',
+  darkMode: 'dca_opt_dark_mode',
 } as const;
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -45,4 +46,12 @@ export function saveAssets(a: Asset[]): void {
 
 export function saveLandingCollapsed(v: boolean): void {
   localStorage.setItem(KEYS.landingCollapsed, JSON.stringify(v));
+}
+
+export function loadDarkMode(): boolean {
+  return tryParse<boolean>(KEYS.darkMode, false);
+}
+
+export function saveDarkMode(v: boolean): void {
+  localStorage.setItem(KEYS.darkMode, JSON.stringify(v));
 }
