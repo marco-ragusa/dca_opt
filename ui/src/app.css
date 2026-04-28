@@ -20,6 +20,21 @@
   --border-hover: #c0bcb6;
 }
 
+html.dark {
+  --bg:           #141412;
+  --surface:      #1e1d1b;
+  --border:       #2e2c28;
+  --border-hover: #4a4740;
+  --text:         #f0ede8;
+  --text-2:       #a09d98;
+  --text-3:       #6b6860;
+
+  --accent:        #4a8c2a;
+  --error:         #cc4444;
+  --error-bg:      #2a1515;
+  --error-border:  #5a2828;
+}
+
 /* ── Reset ── */
 *, *::before, *::after { box-sizing: border-box; }
 html { font-size: 16px; }
@@ -102,6 +117,8 @@ input[type='number'] { -moz-appearance: textfield; }
   padding: 0.3rem 0.75rem;
 }
 .btn-ghost:hover { color: var(--text); border-color: var(--border-hover); }
+
+.btn-icon { padding: 0.3rem 0.4rem; }
 
 .btn-danger-text {
   background: transparent;
