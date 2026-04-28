@@ -11,6 +11,7 @@
   --text-3:  #aaa8a2;
 
   --accent:       #1e3d0a;
+  --accent-hover: #2a5210;
   --error:        #881414;
   --error-bg:     #fdf3f3;
   --error-border: #ecc8c8;
@@ -30,6 +31,7 @@ html.dark {
   --text-3:       #6b6860;
 
   --accent:        #4a8c2a;
+  --accent-hover:  #3a7020;
   --error:         #cc4444;
   --error-bg:      #2a1515;
   --error-border:  #5a2828;
@@ -107,7 +109,7 @@ input[type='number'] { -moz-appearance: textfield; }
   padding: 0.5rem 1.5rem;
   font-weight: 500;
 }
-.btn-primary:hover:not(:disabled) { background: #2a5210; }
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
 .btn-primary:disabled              { opacity: 0.35; cursor: not-allowed; }
 
 .btn-ghost {
