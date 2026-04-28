@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, model_validator
 
 class AssetIn(BaseModel):
     ticker: str = Field(min_length=1)
-    desired_percentage: float = Field(gt=0, le=100)
+    desired_percentage: float = Field(ge=0, le=100)
     shares: float = Field(ge=0)
     fees: float = Field(ge=0)
     percentage_fee: bool = False

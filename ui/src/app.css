@@ -1,0 +1,175 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg:      #f8f8f7;
+  --surface: #ffffff;
+  --border:  #e0ddd8;
+  --text:    #1a1714;
+  --text-2:  #6b6660;
+  --text-3:  #aaa8a2;
+
+  --accent:       #1e3d0a;
+  --error:        #881414;
+  --error-bg:     #fdf3f3;
+  --error-border: #ecc8c8;
+
+  --ff-mono: ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
+  --r: 4px;
+  --border-hover: #c0bcb6;
+}
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; }
+html { font-size: 16px; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Card ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+}
+
+/* ── Inputs ── */
+.field {
+  font-family: inherit;
+  font-size: 0.875rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 0.375rem 0.625rem;
+  width: 100%;
+  outline: none;
+  transition: border-color 120ms;
+  appearance: none;
+}
+.field:focus        { border-color: var(--accent); }
+.field::placeholder { color: var(--text-3); }
+.field.mono         { font-family: var(--ff-mono); font-size: 0.8125rem; }
+.field.sm           { font-size: 0.8125rem; padding: 0.3rem 0.5rem; }
+
+/* number input: hide spinners */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type='number'] { -moz-appearance: textfield; }
+
+/* ── Labels ── */
+.lbl {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--text-2);
+  display: block;
+  margin-bottom: 0.3rem;
+  user-select: none;
+}
+
+/* ── Buttons ── */
+.btn {
+  font-family: inherit;
+  font-size: 0.8125rem;
+  border-radius: var(--r);
+  cursor: pointer;
+  border: none;
+  transition: background 120ms, border-color 120ms, color 120ms;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  padding: 0.5rem 1.5rem;
+  font-weight: 500;
+}
+.btn-primary:hover:not(:disabled) { background: #2a5210; }
+.btn-primary:disabled              { opacity: 0.35; cursor: not-allowed; }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-2);
+  border: 1px solid var(--border);
+  padding: 0.3rem 0.75rem;
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--border-hover); }
+
+.btn-danger-text {
+  background: transparent;
+  color: var(--text-3);
+  border: none;
+  padding: 0.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.btn-danger-text:hover { color: var(--error); }
+
+/* ── Custom checkbox ── */
+input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  border: 1.5px solid var(--border);
+  border-radius: 3px;
+  background: var(--surface);
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 120ms, border-color 120ms;
+}
+input[type='checkbox']:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+input[type='checkbox']:checked::after {
+  content: '';
+  position: absolute;
+  left: 3.5px;
+  top: 1px;
+  width: 5px;
+  height: 8.5px;
+  border: 1.5px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+/* ── Divider ── */
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0;
+}
+
+/* ── Stat cell ── */
+.stat-cell .stat-label {
+  font-size: 0.6875rem;
+  color: var(--text-3);
+  display: block;
+  margin-bottom: 0.2rem;
+}
+.stat-cell .stat-value {
+  font-family: var(--ff-mono);
+  font-size: 0.8125rem;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Section heading ── */
+.section-title {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+}

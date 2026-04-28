@@ -28,9 +28,8 @@ def test_asset_empty_ticker_raises():
         AssetIn(**_asset(ticker=""))
 
 
-def test_asset_desired_percentage_zero_raises():
-    with pytest.raises(ValidationError):
-        AssetIn(**_asset(desired_percentage=0.0))
+def test_asset_desired_percentage_zero_allowed():
+    AssetIn(**_asset(desired_percentage=0.0, ticker="A"))
 
 
 def test_asset_desired_percentage_over_100_raises():

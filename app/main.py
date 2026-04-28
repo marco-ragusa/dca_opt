@@ -4,8 +4,10 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.routes import health, rebalance
+from app.core.config import get_settings
 from app.core.exceptions import MarketDataError, market_data_error_handler
 from app.core.log_config import setup_logging
 
@@ -18,6 +20,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="DCA Rebalancer API", version="2.0.0", lifespan=lifespan)
+
+_cors = get_settings().cors_origins
+_origins = [o.strip() for o in _cors.split(",") if o.strip()] if _cors else []
+if _origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_origins,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
 app.add_exception_handler(MarketDataError, market_data_error_handler)
 app.include_router(health.router, prefix="/v1")
 app.include_router(rebalance.router, prefix="/v1")

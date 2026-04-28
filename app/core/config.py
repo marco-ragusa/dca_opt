@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     cache_backend: Literal["local", "redis"] = "local"
     cache_ttl_seconds: int = 300
     redis_url: str | None = None
+    cors_origins: str | None = None
 
 
 @lru_cache(maxsize=1)
