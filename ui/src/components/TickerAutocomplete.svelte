@@ -83,6 +83,7 @@
           <span class="autocomplete-ticker">{result.ticker}</span>
           <span class="autocomplete-name">{result.name}</span>
         </li>
+        <li role="presentation" class="autocomplete-divider"></li>
       {/each}
       {#if results.length === 0}
         <li role="option" aria-selected="false" aria-disabled="true" class="autocomplete-empty">No results</li>
@@ -101,7 +102,6 @@
     position: absolute;
     top: calc(100% + 2px);
     left: 0;
-    right: 0;
     z-index: 10;
     list-style: none;
     margin: 0;
@@ -110,14 +110,22 @@
     border: 1px solid var(--border);
     border-radius: var(--r);
     max-height: 220px;
+    width: max-content;
+    min-width: 100%;
+    max-width: 420px;
     overflow-y: auto;
+    scrollbar-width: none;
+  }
+
+  .autocomplete-dropdown::-webkit-scrollbar {
+    display: none;
   }
 
   .autocomplete-item {
     display: flex;
-    align-items: baseline;
-    gap: 8px;
-    padding: 6px 10px;
+    flex-direction: column;
+    gap: 2px;
+    padding: 7px 10px;
     cursor: pointer;
   }
 
@@ -127,17 +135,23 @@
 
   .autocomplete-ticker {
     font-family: var(--ff-mono);
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     color: var(--text);
-    white-space: nowrap;
   }
 
   .autocomplete-name {
-    font-size: 0.75rem;
+    font-size: 0.6875rem;
+    font-style: italic;
     color: var(--text-2);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .autocomplete-divider {
+    border-top: 1px solid var(--border);
+    margin: 0;
+    padding: 0;
   }
 
   .autocomplete-empty {

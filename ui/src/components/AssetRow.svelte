@@ -92,7 +92,7 @@
 
 <style>
   .asset-row {
-    overflow: hidden;
+    overflow: visible;
   }
 
   .asset-fields {
