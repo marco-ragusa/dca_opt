@@ -37,7 +37,7 @@ html.dark {
   --error-border:  #5a2828;
 }
 
-/* ── Reset ── */
+/*  Reset  */
 *, *::before, *::after { box-sizing: border-box; }
 html { font-size: 16px; }
 body {
@@ -49,14 +49,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Card ── */
+/*  Card  */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r);
 }
 
-/* ── Inputs ── */
+/*  Inputs  */
 .field {
   font-family: inherit;
   font-size: 0.875rem;
@@ -80,7 +80,7 @@ input[type='number']::-webkit-inner-spin-button,
 input[type='number']::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 input[type='number'] { -moz-appearance: textfield; }
 
-/* ── Labels ── */
+/*  Labels  */
 .lbl {
   font-size: 0.6875rem;
   font-weight: 600;
@@ -90,7 +90,7 @@ input[type='number'] { -moz-appearance: textfield; }
   user-select: none;
 }
 
-/* ── Buttons ── */
+/*  Buttons  */
 .btn {
   font-family: inherit;
   font-size: 0.8125rem;
@@ -133,7 +133,7 @@ input[type='number'] { -moz-appearance: textfield; }
 }
 .btn-danger-text:hover { color: var(--error); }
 
-/* ── Custom checkbox ── */
+/*  Custom checkbox  */
 input[type='checkbox'] {
   appearance: none;
   -webkit-appearance: none;
@@ -164,14 +164,14 @@ input[type='checkbox']:checked::after {
   transform: rotate(45deg);
 }
 
-/* ── Divider ── */
+/*  Divider  */
 .divider {
   border: none;
   border-top: 1px solid var(--border);
   margin: 0;
 }
 
-/* ── Stat cell ── */
+/*  Stat cell  */
 .stat-cell .stat-label {
   font-size: 0.6875rem;
   color: var(--text-3);
@@ -185,7 +185,7 @@ input[type='checkbox']:checked::after {
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Section heading ── */
+/*  Section heading  */
 .section-title {
   font-size: 0.6875rem;
   font-weight: 600;
