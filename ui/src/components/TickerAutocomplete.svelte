@@ -73,7 +73,7 @@
   />
   {#if open}
     <ul class="autocomplete-dropdown" role="listbox">
-      {#each results as result (result.ticker)}
+      {#each results as result (`${result.ticker}:${result.exchange}`)}
         <li
           role="option"
           aria-selected="false"
@@ -85,7 +85,7 @@
         </li>
       {/each}
       {#if results.length === 0}
-        <li class="autocomplete-empty">No results</li>
+        <li role="option" aria-disabled="true" class="autocomplete-empty">No results</li>
       {/if}
     </ul>
   {/if}
