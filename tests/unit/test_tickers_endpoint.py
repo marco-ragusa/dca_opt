@@ -123,3 +123,27 @@ def test_yfinance_exception_returns_503(client):
         resp = client.get("/v1/tickers/search?q=VWCE")
     assert resp.status_code == 503
     assert resp.json()["detail"] == "Market data unavailable"
+
+
+def test_equity_included(client):
+    quotes = [_quote("AAPL", "Apple Inc.", "NMS", "EQUITY")]
+    with patch("app.api.v1.routes.tickers.yf.Search", return_value=_mock_search(quotes)):
+        resp = client.get("/v1/tickers/search?q=AAPL")
+    assert resp.status_code == 200
+    assert resp.json()["results"][0]["ticker"] == "AAPL"
+
+
+def test_mutualfund_included(client):
+    quotes = [_quote("VFIAX", "Vanguard 500 Index Fund", "NAS", "MUTUALFUND")]
+    with patch("app.api.v1.routes.tickers.yf.Search", return_value=_mock_search(quotes)):
+        resp = client.get("/v1/tickers/search?q=VFIAX")
+    assert resp.status_code == 200
+    assert resp.json()["results"][0]["ticker"] == "VFIAX"
+
+
+def test_empty_name_when_both_names_absent(client):
+    quote = {"symbol": "XYZ", "exchange": "TSX", "quoteType": "EQUITY"}
+    with patch("app.api.v1.routes.tickers.yf.Search", return_value=_mock_search([quote])):
+        resp = client.get("/v1/tickers/search?q=XYZ")
+    assert resp.status_code == 200
+    assert resp.json()["results"][0]["name"] == ""

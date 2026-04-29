@@ -16,7 +16,7 @@ _ALLOWED_TYPES = {"EQUITY", "ETF", "MUTUALFUND", "CRYPTOCURRENCY", "CURRENCY"}
 
 
 def _fetch_quotes(q: str) -> list[dict]:
-    return yf.Search(q).quotes
+    return yf.Search(q).quotes or []
 
 
 @router.get("/tickers/search", response_model=TickerSearchResponse)
