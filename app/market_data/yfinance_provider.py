@@ -29,7 +29,7 @@ def _fetch_single(ticker: str) -> float:
     Raises:
         MarketDataError: If the price cannot be fetched after all retries.
     """
-    last_error: Exception | str | None = None
+    last_error: str | None = None
     for attempt in range(1, _FALLBACK_RETRIES + 1):
         try:
             history = yf.Ticker(ticker).history(period="1d")
@@ -41,7 +41,7 @@ def _fetch_single(ticker: str) -> float:
             )
             last_error = f"Empty price history for ticker '{ticker}'."
         except Exception as exc:
-            last_error = exc
+            last_error = str(exc)
             logger.warning(
                 "Attempt %d/%d failed for '%s': %s",
                 attempt, _FALLBACK_RETRIES, ticker, exc,

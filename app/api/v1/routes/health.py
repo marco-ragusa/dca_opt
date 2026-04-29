@@ -17,14 +17,18 @@ async def health() -> JSONResponse:
 
 
 @router.get("/ready", include_in_schema=False)
-async def ready() -> JSONResponse:
+def ready() -> JSONResponse:
     settings = get_settings()
     if settings.cache_backend == "redis":
         if not settings.redis_url:
             return JSONResponse(status_code=503, content={"status": "redis_url_missing"})
         try:
             import redis
-            client = redis.from_url(settings.redis_url, socket_connect_timeout=2)
+            client = redis.from_url(
+                settings.redis_url,
+                socket_connect_timeout=2,
+                socket_timeout=2,
+            )
             client.ping()
         except Exception as exc:
             logger.warning("Readiness check failed: %s", exc)

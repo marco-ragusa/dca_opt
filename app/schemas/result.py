@@ -20,7 +20,7 @@ class AssetResultOut(BaseModel):
         "current_percentage", "desired_percentage", "shares",
         "allocated", "ticker_price", "fees",
     )
-    def _fmt(self, v: float) -> float:
+    def _fmt_fields(self, v: float) -> float:
         return truncate2(v)
 
 
@@ -30,5 +30,5 @@ class RebalanceResponse(BaseModel):
     change: float
 
     @field_serializer("total_fees", "change")
-    def _fmt(self, v: float) -> float:
+    def _fmt_totals(self, v: float) -> float:
         return truncate2(v)

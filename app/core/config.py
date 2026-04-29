@@ -3,6 +3,7 @@
 from functools import lru_cache
 from typing import Literal
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,6 +15,12 @@ class Settings(BaseSettings):
     cache_ttl_seconds: int = 300
     redis_url: str | None = None
     cors_origins: str | None = None
+
+    @model_validator(mode="after")
+    def _check_redis_url(self) -> "Settings":
+        if self.cache_backend == "redis" and self.redis_url is None:
+            raise ValueError("REDIS_URL must be set when CACHE_BACKEND=redis")
+        return self
 
 
 @lru_cache(maxsize=1)
