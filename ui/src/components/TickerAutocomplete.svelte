@@ -125,7 +125,7 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    padding: 7px 10px;
+    padding: 4px 10px;
     cursor: pointer;
   }
 
