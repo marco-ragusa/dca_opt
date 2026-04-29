@@ -85,7 +85,7 @@
         </li>
       {/each}
       {#if results.length === 0}
-        <li role="option" aria-disabled="true" class="autocomplete-empty">No results</li>
+        <li role="option" aria-selected="false" aria-disabled="true" class="autocomplete-empty">No results</li>
       {/if}
     </ul>
   {/if}
