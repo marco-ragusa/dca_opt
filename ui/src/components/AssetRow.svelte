@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Asset } from '../types';
   import { createEventDispatcher } from 'svelte';
+  import TickerAutocomplete from './TickerAutocomplete.svelte';
 
   export let asset: Asset;
   export let index: number;
@@ -28,14 +29,10 @@
   <div class="asset-fields">
     <div class="field-group ticker-group">
       <label class="lbl" for="ticker-{asset.id}">Ticker</label>
-      <input
+      <TickerAutocomplete
         id="ticker-{asset.id}"
-        type="text"
         value={asset.ticker}
-        placeholder="VWCE.DE"
-        on:input={e => dispatch('update', { ticker: (e.target as HTMLInputElement).value.trim().toUpperCase() })}
-        class="field mono"
-        style="text-transform: uppercase;"
+        on:change={e => dispatch('update', { ticker: e.detail })}
       />
     </div>
 
