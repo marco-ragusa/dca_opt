@@ -226,3 +226,30 @@ The `fees` field in the response always shows the effective absolute fee paid.
 The greedy algorithm is also used as a fallback when `change_cents > 1,000,000` (~10,000), regardless of flag, to bound memory and time.
 
 When `only_buy=true` the DP additionally excludes already-overweight assets during redistribution; the buy-only constraint is preserved even for leftover change.
+
+### `GET /v1/tickers/search`
+
+Search for instruments by ticker symbol or name. Covers equities, ETFs, mutual funds, cryptocurrencies, and currency pairs. Indices, futures, and options are excluded.
+
+**Query parameters:**
+
+| Parameter | Required | Description                        |
+|-----------|----------|------------------------------------|
+| `q`       | yes      | Search query, minimum 2 characters |
+
+**Response** (`200 OK`):
+
+```json
+{
+    "results": [
+        {
+            "ticker": "VWCE.DE",
+            "name": "Vanguard FTSE All-World UCITS ETF",
+            "exchange": "XETRA",
+            "type": "ETF"
+        }
+    ]
+}
+```
+
+Returns `422` when `q` is absent or shorter than 2 characters. Returns `503` when Yahoo Finance is unreachable.

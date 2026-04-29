@@ -19,6 +19,7 @@ ui/
 │       ├── GlobalSettings.svelte      # Increment, only-buy, optimal-redistribute controls
 │       ├── PortfolioEditor.svelte     # Asset table + settings form + run button
 │       ├── AssetRow.svelte            # Single asset editor row
+│       ├── TickerAutocomplete.svelte  # Debounced ticker search input with results dropdown
 │       ├── ResultsPanel.svelte        # Results view (shown after a successful run)
 │       ├── AssetResult.svelte         # Single result row (buy qty, fees, allocations)
 │       ├── PercentageIndicator.svelte # Visual bar: current vs desired allocation
