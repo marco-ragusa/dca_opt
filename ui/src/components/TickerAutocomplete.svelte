@@ -83,10 +83,9 @@
           <span class="autocomplete-ticker">{result.ticker}</span>
           <span class="autocomplete-name">{result.name}</span>
         </li>
-        <li role="presentation" class="autocomplete-divider"></li>
       {/each}
       {#if results.length === 0}
-        <li role="option" aria-selected="false" aria-disabled="true" class="autocomplete-empty">No results</li>
+        <li role="presentation" class="autocomplete-empty">No results</li>
       {/if}
     </ul>
   {/if}
@@ -148,10 +147,8 @@
     white-space: nowrap;
   }
 
-  .autocomplete-divider {
+  .autocomplete-item + .autocomplete-item {
     border-top: 1px solid var(--border);
-    margin: 0;
-    padding: 0;
   }
 
   .autocomplete-empty {

@@ -8,9 +8,12 @@
 
   function copyJson() {
     if (!result) return;
-    navigator.clipboard.writeText(JSON.stringify(result, null, 2));
-    copied = true;
-    setTimeout(() => { copied = false; }, 1800);
+    navigator.clipboard.writeText(JSON.stringify(result, null, 2))
+      .then(() => {
+        copied = true;
+        setTimeout(() => { copied = false; }, 1800);
+      })
+      .catch(() => {});
   }
 </script>
 

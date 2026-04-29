@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import type { Asset, Settings, RebalanceResponse, PortfolioExport } from './types';
   import {
     loadSettings, loadAssets, loadLandingCollapsed, loadDarkMode,
@@ -79,14 +79,13 @@
 
       if (res.ok) {
         lastResult = await res.json() as RebalanceResponse;
-        setTimeout(() => {
-          document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' });
-        }, 50);
+        await tick();
+        document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' });
       } else if (res.status === 422) {
         const data = await res.json();
         const msgs = Array.isArray(data.detail)
           ? data.detail.map((d: { msg?: string }) => d.msg || JSON.stringify(d)).join('; ')
-          : String(data.detail);
+          : typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
         error = `Validation error: ${msgs}`;
       } else if (res.status === 502) {
         error = 'Market data unavailable. Check ticker symbols or try again.';

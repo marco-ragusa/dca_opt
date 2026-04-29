@@ -27,9 +27,27 @@ export function loadSettings(): Settings {
   return { ...DEFAULT_SETTINGS, ...tryParse<Partial<Settings>>(KEYS.settings, {}) };
 }
 
+function isValidAsset(a: unknown): a is Asset {
+  if (typeof a !== 'object' || a === null) return false;
+  const obj = a as Record<string, unknown>;
+  return (
+    typeof obj.id === 'string' &&
+    typeof obj.ticker === 'string' &&
+    typeof obj.desiredPercentage === 'number' &&
+    typeof obj.shares === 'number' &&
+    typeof obj.fees === 'number' &&
+    typeof obj.percentageFee === 'boolean'
+  );
+}
+
 export function loadAssets(): Asset[] {
   const val = tryParse<unknown>(KEYS.assets, null);
-  return Array.isArray(val) ? (val as Asset[]) : [];
+  if (!Array.isArray(val)) return [];
+  if (!val.every(isValidAsset)) {
+    console.warn('Stored assets failed validation, resetting to empty.');
+    return [];
+  }
+  return val;
 }
 
 export function loadLandingCollapsed(): boolean {
