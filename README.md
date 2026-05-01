@@ -1,55 +1,68 @@
 # DCA OPT
+### Rebalancing execution engine for passive ETF investors
 
-Most passive investors already know the theory: low-cost ETFs, diversification,
-recurring buys, and rebalancing. What often breaks is execution. Spreadsheets
-become fragile, manual calculations drift, and allocation choices end up inconsistent.
+You know your allocation. Now know exactly what to buy.
 
-DCA OPT is the open source operating layer for investors who have already chosen
-their strategy and want to apply it with rigor. Set your target weights, enter your
-current holdings, add the cash you want to invest, and the tool calculates how many
-shares to buy to move your portfolio as close as possible to the target.
+Enter your ETF targets, current holdings, and the cash you want to deploy. DCA OPT returns the exact number of shares to buy per asset, with your broker's fee structure already priced in, allocation drift shown, and leftover change made explicit. Same inputs always produce the same output.
 
-It is not a financial advisor, a trading app, or a black box. Every result is
-deterministic, explainable, and verifiable. The logic is readable, the formulas
-are documented, and the full stack is open, self-hostable, and contribution-friendly.
+No accounts. No data stored. Self-hostable. MIT licensed.
 
-*Built for passive investors who want clarity, not magic.*
+## How it works
+
+**01 - Set your target allocation**  
+Enter each ETF ticker, your target weight, current share count, and your broker's fee. Live prices are fetched from Yahoo Finance at calculation time.
+
+**02 - Drop in your monthly cash**  
+Enter the cash you want to deploy this period. Enable buy-only mode to ensure DCA OPT never triggers a sale. Enable knapsack mode to maximise cash deployment.
+
+**03 - Get the exact buy order**  
+DCA OPT returns the exact number of shares to buy per asset. Deterministic, explainable, verifiable.
+
+## Algorithm modes
+
+| Mode | When to use |
+|------|-------------|
+| **Greedy** `O(n log n)` | Speed matters; larger portfolios; some leftover tolerance is acceptable. Allocates by largest drift first. |
+| **Knapsack DP** `O(n × W)` | Cash efficiency matters; fixed-fee brokers; minimises leftover change. |
+| **Buy-only** `O(n)` | Rebalancing without adding capital. Set `increment: 0` with `only_buy: true`. |
+
+The algorithm is not proprietary. The source is in [`app/rebalance/rebalance.py`](app/rebalance/rebalance.py). Every formula is readable and every result is verifiable by hand.
 
 ## Prerequisites
 
 - Python 3.11+
 - Node.js 20+
 
-## Quick Start
-
-### Backend
+## Quick start
 
 ```bash
+# Clone
+git clone https://github.com/marco-ragusa/dca_opt
+cd dca_opt && cp .env.example .env
+
+# Backend
 python -m venv venv
-
-# Windows
-venv\Scripts\Activate.ps1
-# Linux / macOS
-source venv/bin/activate
-
+source venv/bin/activate          # Windows: venv\Scripts\Activate.ps1
 pip install -r requirements-dev.txt
-cp .env.example .env
 uvicorn app.main:app --reload
-```
 
-API available at `http://localhost:8000`. Swagger UI at `http://localhost:8000/docs`.
-
-### Frontend
-
-```bash
+# Frontend (separate terminal)
 cd ui && npm install
 npm run dev
 ```
 
-UI available at `http://localhost:5173`.
+API at `http://localhost:8000` · Swagger UI at `http://localhost:8000/docs`  
+UI at `http://localhost:5173` (Vite proxies `/v1/*` to the backend in dev mode)
 
-Run both concurrently. In dev mode, Vite proxies `/v1/*` to the backend automatically.
-
-For backend details (API reference, configuration, tests) see [`app/README.md`](app/README.md).
-
+For backend details (API reference, configuration, tests) see [`app/README.md`](app/README.md).  
 For frontend details (structure, build) see [`ui/README.md`](ui/README.md).
+
+## Stack
+
+- **Backend** — FastAPI, Python 3.11+, Yahoo Finance (`yfinance`)
+- **Frontend** — Svelte 4, TypeScript, Tailwind CSS, Vite
+- **Market data** — Yahoo Finance, fetched at request time, cached 5 minutes
+
+---
+
+*A financial tool must be auditable. So the algorithm is public.*
