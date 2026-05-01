@@ -2,24 +2,15 @@
   export let sum: number;
 
   $: valid = Math.abs(sum - 100) <= 0.01;
-  $: display = sum.toFixed(2);
+  $: pct = Math.min(sum, 100);
 </script>
 
-<div style="display: flex; align-items: center; gap: 8px;">
-  <div style="
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: {valid ? 'var(--accent)' : 'var(--error)'};
-    flex-shrink: 0;
-    transition: background 120ms;
-  "></div>
-  <span style="
-    font-family: var(--ff-mono);
-    font-size: 0.75rem;
-    color: {valid ? 'var(--text-3)' : 'var(--error)'};
-    transition: color 120ms;
-  ">
-    {display}% total{valid ? '' : ' — must equal 100%'}
+<div class="pct-label">
+  <span>Allocation total</span>
+  <span style="font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600;color:{valid ? 'var(--text)' : 'var(--error)'}">
+    {sum.toFixed(2)}%
   </span>
+</div>
+<div class="pct-bar">
+  <div class="pct-fill {valid ? '' : 'over'}" style="width:{pct}%"></div>
 </div>

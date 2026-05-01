@@ -1,58 +1,66 @@
 <script lang="ts">
-  import type { RebalanceResponse } from '../types';
+  import type { RebalanceResponse, Settings } from '../types';
   import AssetResult from './AssetResult.svelte';
 
   export let result: RebalanceResponse | null;
+  export let settings: Settings;
+
+  $: totalAllocated = result
+    ? result.results.reduce((s, r) => s + r.allocated, 0)
+    : 0;
 
   let copied = false;
-
   function copyJson() {
     if (!result) return;
     navigator.clipboard.writeText(JSON.stringify(result, null, 2))
-      .then(() => {
-        copied = true;
-        setTimeout(() => { copied = false; }, 1800);
-      })
+      .then(() => { copied = true; setTimeout(() => { copied = false; }, 1800); })
       .catch(() => {});
   }
 </script>
 
-{#if result}
-  <section id="results" style="display: flex; flex-direction: column; gap: 20px;">
-
-    <div style="display: flex; align-items: center; gap: 12px;">
-      <p class="section-title" style="margin: 0;">Results</p>
-      <hr class="divider" style="flex: 1;" />
-      <button type="button" class="btn btn-ghost" on:click={copyJson}>
-        {copied ? 'Copied' : 'Copy JSON'}
-      </button>
-    </div>
-
-    <div style="display: flex; flex-direction: column; gap: 8px;">
-      {#each result.results as asset (asset.id)}
-        <AssetResult {asset} />
-      {/each}
-    </div>
-
-    <div class="card" style="padding: 16px 20px; display: flex; flex-wrap: wrap; gap: 32px; align-items: center;">
-      <div>
-        <p class="section-title" style="margin: 0 0 4px;">Total fees</p>
-        <span style="font-family: var(--ff-mono); font-size: 1.0625rem; font-weight: 500; color: var(--text); font-variant-numeric: tabular-nums;">
-          {result.total_fees.toFixed(2)}
-        </span>
+<div class="panel result-panel" id="results">
+  <div class="panel-head">
+    <span class="panel-title">Result</span>
+    {#if result}
+      <div class="results-badges">
+        {#if settings.onlyBuy}<span class="solver-badge">Only buy</span>{/if}
+        {#if settings.optimalRedistribute}<span class="solver-badge">Knapsack DP</span>{/if}
+        <button type="button" class="add-btn" style="font-size:0.75rem" on:click={copyJson}>
+          {copied ? 'Copied' : 'Copy JSON'}
+        </button>
       </div>
-      <div>
-        <p class="section-title" style="margin: 0 0 4px;">Leftover cash</p>
-        <span style="font-family: var(--ff-mono); font-size: 1.0625rem; font-weight: 500; color: var(--text); font-variant-numeric: tabular-nums;">
-          {result.change.toFixed(2)}
-        </span>
+    {/if}
+  </div>
+
+  <div class="panel-body" style="padding:0.625rem 0.875rem 1rem">
+    {#if result}
+      <div class="result-list">
+        <div class="result-list-head">
+          <span>Ticker</span>
+          <span>Buy</span>
+          <span>Result</span>
+        </div>
+        {#each result.results as asset (asset.id)}
+          <AssetResult {asset} />
+        {/each}
       </div>
-      <div style="margin-left: auto;">
-        <p class="section-title" style="margin: 0 0 4px;">Assets</p>
-        <span style="font-family: var(--ff-mono); font-size: 1.0625rem; font-weight: 500; color: var(--text);">
-          {result.results.length}
-        </span>
+
+      <div class="results-summary">
+        <div>
+          <div class="stat-label">Allocated</div>
+          <div class="stat-val">{totalAllocated.toFixed(2)}</div>
+        </div>
+        <div>
+          <div class="stat-label">Total fees</div>
+          <div class="stat-val">{result.total_fees.toFixed(2)}</div>
+        </div>
+        <div>
+          <div class="stat-label">Change</div>
+          <div class="stat-val">{result.change.toFixed(2)}</div>
+        </div>
       </div>
-    </div>
-  </section>
-{/if}
+    {:else}
+      <div class="result-empty">Run the calculator to see results.</div>
+    {/if}
+  </div>
+</div>

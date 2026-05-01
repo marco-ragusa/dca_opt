@@ -3,7 +3,6 @@ import type { Asset, Settings } from './types';
 const KEYS = {
   settings: 'dca_opt_settings',
   assets: 'dca_opt_assets',
-  landingCollapsed: 'dca_opt_landing_collapsed',
   darkMode: 'dca_opt_dark_mode',
 } as const;
 
@@ -50,20 +49,12 @@ export function loadAssets(): Asset[] {
   return val;
 }
 
-export function loadLandingCollapsed(): boolean {
-  return tryParse<boolean>(KEYS.landingCollapsed, false);
-}
-
 export function saveSettings(s: Settings): void {
   localStorage.setItem(KEYS.settings, JSON.stringify(s));
 }
 
 export function saveAssets(a: Asset[]): void {
   localStorage.setItem(KEYS.assets, JSON.stringify(a));
-}
-
-export function saveLandingCollapsed(v: boolean): void {
-  localStorage.setItem(KEYS.landingCollapsed, JSON.stringify(v));
 }
 
 export function loadDarkMode(): boolean {

@@ -15,7 +15,7 @@ class CachedMarketDataProvider(AbstractMarketDataProvider):
 
     Semantica fail-fast: if one or more tickers are not in cache and the
     underlying provider raises, the exception propagates in full. A rebalance
-    calculation requires all prices — a partial result would be silently wrong.
+    calculation requires all prices - a partial result would be silently wrong.
 
     Stale data is never returned. If resilience is needed in the future, add
     an explicit ``stale_on_error`` flag rather than changing the default.

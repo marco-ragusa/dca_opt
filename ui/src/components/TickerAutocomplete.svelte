@@ -4,6 +4,7 @@
 
   export let value: string = '';
   export let id: string = '';
+  export let cellStyle: boolean = false;
 
   interface TickerResult {
     ticker: string;
@@ -16,6 +17,7 @@
 
   let results: TickerResult[] = [];
   let open = false;
+  let activeIndex = -1;
   let debounceTimer: ReturnType<typeof setTimeout>;
 
   function onInput(e: Event) {
@@ -38,9 +40,10 @@
       if (!res.ok) return;
       const data = await res.json();
       results = data.results ?? [];
+      activeIndex = -1;
       open = true;
     } catch {
-      // network error — field remains manually editable
+      // network error - field remains manually editable
     }
   }
 
@@ -49,10 +52,32 @@
     dispatch('change', ticker);
     open = false;
     results = [];
+    activeIndex = -1;
   }
 
   function onBlur() {
-    setTimeout(() => { open = false; }, 150);
+    setTimeout(() => { open = false; activeIndex = -1; }, 150);
+  }
+
+  function onKeydown(e: KeyboardEvent) {
+    if (!open || results.length === 0) {
+      if (e.key === 'Escape') { open = false; activeIndex = -1; }
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      activeIndex = Math.min(activeIndex + 1, results.length - 1);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      activeIndex = Math.max(activeIndex - 1, -1);
+    } else if (e.key === 'Enter' && activeIndex >= 0) {
+      e.preventDefault();
+      select(results[activeIndex].ticker);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      open = false;
+      activeIndex = -1;
+    }
   }
 
   onDestroy(() => clearTimeout(debounceTimer));
@@ -66,19 +91,26 @@
     placeholder="VWCE.DE"
     on:input={onInput}
     on:blur={onBlur}
-    class="field mono"
+    on:keydown={onKeydown}
+    class={cellStyle ? 'cell-input ticker' : 'field mono'}
     style="text-transform: uppercase;"
     autocomplete="off"
     spellcheck="false"
+    aria-label="Ticker symbol"
+    aria-expanded={open}
+    aria-autocomplete="list"
+    aria-activedescendant={activeIndex >= 0 ? `autocomplete-opt-${activeIndex}` : undefined}
   />
   {#if open}
     <ul class="autocomplete-dropdown" role="listbox">
-      {#each results as result (`${result.ticker}:${result.exchange}`)}
+      {#each results as result, i (`${result.ticker}:${result.exchange}`)}
         <li
+          id="autocomplete-opt-{i}"
           role="option"
-          aria-selected="false"
+          aria-selected={activeIndex === i}
           on:mousedown|preventDefault={() => select(result.ticker)}
           class="autocomplete-item"
+          class:active={activeIndex === i}
         >
           <span class="autocomplete-ticker">{result.ticker}</span>
           <span class="autocomplete-name">{result.name}</span>
@@ -128,7 +160,8 @@
     cursor: pointer;
   }
 
-  .autocomplete-item:hover {
+  .autocomplete-item:hover,
+  .autocomplete-item.active {
     background: var(--bg);
   }
 

@@ -1,4 +1,4 @@
-"""Unit tests for run_rebalance() — market provider mocked out."""
+"""Unit tests for run_rebalance() - market provider mocked out."""
 
 import pytest
 from unittest.mock import MagicMock
@@ -299,7 +299,7 @@ def test_percentage_fee_not_counted_when_buy_is_zero():
 
 
 def test_mixed_fee_types():
-    """One fixed-fee and one percentage-fee asset — correct totals.
+    """One fixed-fee and one percentage-fee asset - correct totals.
 
     A: 60 %, price=50, fee=3 (fixed) → ef=3, net=597, buy=11
     B: 40 %, price=100, fee=1 % → ef=4, net=396, buy=3

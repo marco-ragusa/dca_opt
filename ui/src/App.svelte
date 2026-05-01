@@ -2,23 +2,27 @@
   import { onMount, tick } from 'svelte';
   import type { Asset, Settings, RebalanceResponse, PortfolioExport } from './types';
   import {
-    loadSettings, loadAssets, loadLandingCollapsed, loadDarkMode,
-    saveSettings, saveAssets, saveLandingCollapsed, saveDarkMode,
+    loadSettings, loadAssets, loadDarkMode,
+    saveSettings, saveAssets, saveDarkMode,
     DEFAULT_SETTINGS,
   } from './storage';
 
   import Header from './components/Header.svelte';
-  import Landing from './components/Landing.svelte';
+  import Hero from './components/Hero.svelte';
+  import GlobalSettings from './components/GlobalSettings.svelte';
   import PortfolioEditor from './components/PortfolioEditor.svelte';
   import ResultsPanel from './components/ResultsPanel.svelte';
-  import ErrorMessage from './components/ErrorMessage.svelte';
+  import TrustRail from './components/TrustRail.svelte';
+  import HowItWorks from './components/HowItWorks.svelte';
+  import AlgoSection from './components/AlgoSection.svelte';
+  import OssSection from './components/OssSection.svelte';
 
   let settings: Settings = DEFAULT_SETTINGS;
   let assets: Asset[] = [];
   let lastResult: RebalanceResponse | null = null;
+  let resultSettings: Settings = DEFAULT_SETTINGS;
   let error: string | null = null;
   let loading = false;
-  let landingCollapsed = false;
   let dark = false;
 
   let fileInput: HTMLInputElement;
@@ -26,7 +30,6 @@
   onMount(() => {
     settings = loadSettings();
     assets = loadAssets();
-    landingCollapsed = loadLandingCollapsed();
     dark = loadDarkMode();
     document.documentElement.classList.toggle('dark', dark);
   });
@@ -78,9 +81,10 @@
       });
 
       if (res.ok) {
+        resultSettings = { ...settings };
         lastResult = await res.json() as RebalanceResponse;
         await tick();
-        document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } else if (res.status === 422) {
         const data = await res.json();
         const msgs = Array.isArray(data.detail)
@@ -215,40 +219,95 @@
   on:toggleDark={handleToggleDark}
 />
 
-<main style="max-width: 896px; margin: 0 auto; padding: 36px 20px 64px; display: flex; flex-direction: column; gap: 36px;">
-  <Landing
-    collapsed={landingCollapsed}
-    on:toggleCollapsed={() => {
-      landingCollapsed = !landingCollapsed;
-      saveLandingCollapsed(landingCollapsed);
-    }}
-  />
+<Hero />
 
-  <ErrorMessage message={error} />
+<div class="tool-section">
+  {#if error}
+    <div class="error-box" style="margin-bottom:1rem" role="alert">{error}</div>
+  {/if}
 
-  <PortfolioEditor
-    {settings}
-    {assets}
-    {loading}
-    on:updateSettings={e => updateSettings(e.detail)}
-    on:addAsset={addAsset}
-    on:removeAsset={e => removeAsset(e.detail)}
-    on:updateAsset={e => updateAsset(e.detail.id, e.detail.patch)}
-    on:run={runRebalance}
-  />
+  <div class="tool-grid">
 
-  <ResultsPanel result={lastResult} />
-</main>
+    <!-- Settings panel -->
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">Settings</span>
+      </div>
+      <div class="panel-body">
+        <GlobalSettings
+          increment={settings.increment}
+          onlyBuy={settings.onlyBuy}
+          optimalRedistribute={settings.optimalRedistribute}
+          on:update={e => updateSettings(e.detail)}
+        />
+      </div>
+    </div>
 
-<footer style="border-top: 1px solid var(--border); margin-top: auto;">
-  <div style="max-width: 896px; margin: 0 auto; padding: 12px 20px; display: flex; align-items: center; gap: 16px;">
-    <span style="font-size: 0.75rem; color: var(--text-3);">DCA OPT</span>
-    <span style="font-size: 0.6875rem; color: var(--text-3);">v2.0.0</span>
-    <a
-      href="https://github.com/marco-ragusa/dca_opt"
-      target="_blank"
-      rel="noopener noreferrer"
-      style="font-size: 0.75rem; color: var(--text-3); text-decoration: none; margin-left: auto;"
-    >GitHub</a>
+    <!-- Assets panel -->
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">Assets</span>
+        <button type="button" class="add-btn" on:click={addAsset}>+ Add asset</button>
+      </div>
+      <div class="panel-body" style="padding:0.625rem 1rem 1rem">
+        <PortfolioEditor
+          {assets}
+          {loading}
+          on:removeAsset={e => removeAsset(e.detail)}
+          on:updateAsset={e => updateAsset(e.detail.id, e.detail.patch)}
+          on:run={runRebalance}
+        />
+      </div>
+    </div>
+
+    <!-- Result panel (owns its own panel shell) -->
+    <ResultsPanel result={lastResult} settings={resultSettings} />
+
+  </div>
+</div>
+
+<TrustRail />
+<HowItWorks />
+<AlgoSection />
+<OssSection />
+
+<footer>
+  <span>DCA OPT - Rebalancing execution engine for passive ETF investors</span>
+  <div class="footer-links">
+    <a href="https://github.com/marco-ragusa/dca_opt" target="_blank" rel="noopener noreferrer">GitHub</a>
+    <span class="footer-sep">·</span>
+    <span>MIT License</span>
+    <span class="footer-sep">·</span>
+    <span>No analytics</span>
   </div>
 </footer>
+
+<style>
+  footer {
+    background: var(--hero-bg);
+    border-top: 1px solid var(--hero-border);
+    padding: 1.25rem clamp(1rem, 4vw, 2rem);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  footer span {
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    color: var(--hero-sub);
+  }
+  .footer-links {
+    display: flex;
+    gap: 1.25rem;
+    align-items: center;
+  }
+  footer a {
+    font-size: 0.6875rem;
+    color: rgba(240,237,232,0.3);
+    text-decoration: none;
+  }
+  footer a:hover { color: var(--teal); }
+  .footer-sep { color: rgba(240,237,232,0.1); }
+</style>

@@ -11,54 +11,87 @@
   }>();
 </script>
 
-<header>
-  <div class="max-w-4xl mx-auto px-5">
-    <span class="brand">DCA OPT</span>
-    <div style="flex: 1;"></div>
-    <div style="display: flex; gap: 6px; flex-shrink: 0; align-items: center;">
-      <button
-        type="button"
-        class="btn btn-ghost btn-icon"
-        on:click={() => dispatch('toggleDark')}
-        aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-      >
-        {#if dark}
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="4"/>
-            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
-          </svg>
-        {:else}
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
-          </svg>
-        {/if}
-      </button>
-      <button type="button" class="btn btn-ghost" on:click={() => dispatch('requestImport')}>Import</button>
-      <button type="button" class="btn btn-ghost" on:click={() => dispatch('requestExport')} disabled={exportDisabled}>Export</button>
-    </div>
+<nav>
+  <span class="wordmark">DCA OPT</span>
+  <div class="nav-actions">
+    <button type="button" class="nav-btn" on:click={() => dispatch('requestImport')}>Import</button>
+    <div class="nav-sep"></div>
+    <button
+      type="button"
+      class="nav-btn"
+      on:click={() => dispatch('requestExport')}
+      disabled={exportDisabled}
+    >Export</button>
+    <div class="nav-sep"></div>
+    <button
+      type="button"
+      class="nav-btn icon-btn"
+      on:click={() => dispatch('toggleDark')}
+      aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+    >
+      {#if dark}
+        <!-- Sun icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"/>
+          <line x1="12" y1="2" x2="12" y2="4"/>
+          <line x1="12" y1="20" x2="12" y2="22"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="2" y1="12" x2="4" y2="12"/>
+          <line x1="20" y1="12" x2="22" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      {:else}
+        <!-- Moon icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      {/if}
+    </button>
   </div>
-</header>
+</nav>
 
 <style>
-  header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
+  nav {
     position: sticky;
     top: 0;
-    z-index: 10;
-  }
-
-  header > div {
-    height: 52px;
+    z-index: 100;
+    background: var(--hero-bg);
+    padding: 0 clamp(1rem, 4vw, 2rem);
+    height: 48px;
     display: flex;
     align-items: center;
-    gap: 16px;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--hero-border);
   }
-
-  .brand {
-    font-size: 1.5rem;
+  .wordmark {
+    font-family: var(--mono);
+    font-size: 0.9375rem;
     font-weight: 600;
-    color: var(--text);
-    flex-shrink: 0;
+    color: #fff;
+    letter-spacing: 0.08em;
+  }
+  .nav-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+  .nav-btn {
+    font-family: var(--sans);
+    font-size: 0.8125rem;
+    color: rgba(255,255,255,0.5);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem 0;
+  }
+  .nav-btn:hover:not(:disabled) { color: rgba(255,255,255,0.9); }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .icon-btn { display: flex; align-items: center; padding: 0.25rem; }
+  .nav-sep {
+    width: 1px;
+    height: 16px;
+    background: rgba(255,255,255,0.12);
   }
 </style>
