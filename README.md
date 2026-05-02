@@ -59,9 +59,9 @@ For frontend details (structure, build) see [`ui/README.md`](ui/README.md).
 
 ## Stack
 
-- **Backend** — FastAPI, Python 3.11+, Yahoo Finance (`yfinance`)
-- **Frontend** — Svelte 4, TypeScript, Tailwind CSS, Vite
-- **Market data** — Yahoo Finance, fetched at request time, cached 5 minutes
+- **Backend** - FastAPI, Python 3.11+, Yahoo Finance (`yfinance`)
+- **Frontend** - Svelte 4, TypeScript, Tailwind CSS, Vite
+- **Market data** - Yahoo Finance, fetched at request time, cached 5 minutes
 
 ---
 
