@@ -24,7 +24,7 @@ DCA OPT returns the exact number of shares to buy per asset. Deterministic, expl
 |------|-------------|
 | **Greedy** `O(n log n)` | Speed matters; some leftover tolerance is acceptable. |
 | **Knapsack DP** `O(n × W)` | Cash efficiency matters; minimises leftover change. |
-| **Buy-only** `O(n)` | Rebalancing without adding capital. Set with `only_buy: true`. |
+| **Buy-only** `O(n)` | Rebalancing without adding capital; set `only_buy: true`. |
 
 The algorithm is not proprietary. The source is in [`app/rebalance/rebalance.py`](app/rebalance/rebalance.py). Every formula is readable and every result is verifiable by hand.
 

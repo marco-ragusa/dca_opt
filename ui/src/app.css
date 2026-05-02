@@ -434,6 +434,17 @@ input[type='checkbox']:checked::after {
   .result-allocated { text-align: left; }
   .delta-bar { width: 24px; flex-basis: 24px; }
 }
+@media (max-width: 480px) {
+  .asset-table th,
+  .asset-table td { padding: 0.2rem 0.3rem; font-size: 0.8125rem; }
+  .result-list-head, .result-row {
+    grid-template-columns: 3.75rem 1.75rem minmax(0, 1fr);
+    gap: 0.3rem;
+  }
+  .stat-val { font-size: 0.875rem; }
+  .results-summary { gap: 0.25rem; }
+  .panel-body { padding: 0.75rem; }
+}
 
 .trust-rail {
   border-top: 1px solid var(--border);

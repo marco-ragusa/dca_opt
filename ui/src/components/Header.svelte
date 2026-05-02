@@ -77,6 +77,10 @@
     gap: 1rem;
     align-items: center;
   }
+  @media (max-width: 400px) {
+    .nav-actions { gap: 0.625rem; }
+    .nav-btn { font-size: 0.75rem; }
+  }
   .nav-btn {
     font-family: var(--sans);
     font-size: 0.8125rem;
