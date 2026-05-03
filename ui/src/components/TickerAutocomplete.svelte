@@ -96,13 +96,15 @@
     style="text-transform: uppercase;"
     autocomplete="off"
     spellcheck="false"
+    role="combobox"
     aria-label="Ticker symbol"
     aria-expanded={open}
+    aria-controls="autocomplete-listbox"
     aria-autocomplete="list"
     aria-activedescendant={activeIndex >= 0 ? `autocomplete-opt-${activeIndex}` : undefined}
   />
   {#if open}
-    <ul class="autocomplete-dropdown" role="listbox">
+    <ul id="autocomplete-listbox" class="autocomplete-dropdown" role="listbox">
       {#each results as result, i (`${result.ticker}:${result.exchange}`)}
         <li
           id="autocomplete-opt-{i}"
