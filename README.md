@@ -2,7 +2,7 @@
 
 <img src="brand-logo.svg" alt="PestoENGINE – Portfolio Rebalancing" width="520" />
 
-**Rebalancing execution engine for passive ETF investors**
+**Rebalancing execution engine for passive investors**
 
 You know your allocation. Now know exactly what to buy.
 
@@ -12,14 +12,14 @@ You know your allocation. Now know exactly what to buy.
 
 </div>
 
-Enter your ETF targets, current holdings, and the cash you want to deploy. PestoENGINE returns the exact number of shares to buy per asset, with your broker's fee structure already priced in, allocation drift shown, and leftover change made explicit. Same inputs always produce the same output.
+Enter your targets, current holdings, and the cash you want to deploy. PestoENGINE returns the exact number of shares to buy per asset, with your broker's fee structure already priced in, allocation drift shown, and leftover change made explicit. Same inputs always produce the same output.
 
 No accounts. No data stored. Self-hostable. MIT licensed.
 
 ## How it works
 
 **01 - Set your target allocation**  
-Enter each ETF ticker, your target weight, current share count, and your broker's fee. Live prices are fetched from Yahoo Finance at calculation time.
+Enter each ticker, your target weight, current share count, and your broker's fee. Live prices are fetched from Yahoo Finance at calculation time.
 
 **02 - Drop in your monthly cash**  
 Enter the cash you want to deploy this period. Enable buy-only mode to ensure PestoENGINE never triggers a sale. Enable knapsack mode to maximise cash deployment.
