@@ -1,8 +1,16 @@
-<img src="brand-logo.svg" alt="PestoENGINE – Portfolio Rebalancing" width="480" />
+<div align="center">
 
-### Rebalancing execution engine for passive ETF investors
+<img src="brand-logo.svg" alt="PestoENGINE – Portfolio Rebalancing" width="520" />
+
+**Rebalancing execution engine for passive ETF investors**
 
 You know your allocation. Now know exactly what to buy.
+
+[![MIT License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg)](https://fastapi.tiangolo.com/)
+
+</div>
 
 Enter your ETF targets, current holdings, and the cash you want to deploy. PestoENGINE returns the exact number of shares to buy per asset, with your broker's fee structure already priced in, allocation drift shown, and leftover change made explicit. Same inputs always produce the same output.
 

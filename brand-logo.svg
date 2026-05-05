@@ -38,15 +38,15 @@
   <!-- TESTO PESTO ENGINE -->
   <g transform="translate(190, 115)">
     <!-- PESTO -->
-    <text x="0" y="0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" 
-          font-size="82" font-weight="900" fill="#0F172A" letter-spacing="-2">PESTO</text>
+    <text x="0" y="0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+          font-size="82" font-weight="900" fill="#475569" letter-spacing="-2">PESTO</text>
 
     <!-- ENGINE -->
-    <text x="270" y="0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" 
+    <text x="270" y="0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
           font-size="82" font-weight="300" fill="#10B981" letter-spacing="-1.5">ENGINE</text>
 
     <!-- TAGLINE -->
-    <text x="8" y="35" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" 
-          font-size="16" font-weight="700" fill="#64748B" letter-spacing="5">PORTFOLIO REBALANCING</text>
+    <text x="8" y="35" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+          font-size="16" font-weight="700" fill="#94A3B8" letter-spacing="5">PORTFOLIO REBALANCING</text>
   </g>
 </svg>
