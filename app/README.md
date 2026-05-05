@@ -1,4 +1,4 @@
-# Backend
+# PestoENGINE – Backend
 
 FastAPI application that exposes `POST /v1/rebalance`. Accepts a portfolio
 configuration and returns per-asset buy quantities, fees, and leftover change.
@@ -7,40 +7,17 @@ configuration and returns per-asset buy quantities, fees, and leftover change.
 
 ```
 app/
-├── main.py                        # FastAPI app entry point
-├── api/
-│   ├── deps.py                    # Dependency injection (market provider)
-│   └── v1/routes/
-│       ├── rebalance.py           # POST /v1/rebalance
-│       └── health.py              # GET /v1/health, GET /v1/ready
-├── schemas/
-│   ├── request.py                 # RebalanceRequest, AssetIn (Pydantic v2)
-│   └── result.py                  # RebalanceResponse, AssetResultOut
-├── services/
-│   └── rebalance_service.py       # Core orchestration logic
-├── market_data/
-│   ├── base.py                    # AbstractMarketDataProvider (ABC)
-│   ├── yfinance_provider.py       # yfinance batch + fallback retry
-│   ├── cache.py                   # AbstractCache + LocalCache (in-memory, TTL)
-│   ├── redis_cache.py             # RedisCache (lazy import, per cluster)
-│   └── cached_provider.py         # CachedMarketDataProvider (decorator)
-├── core/
-│   ├── config.py                  # Settings via pydantic-settings
-│   ├── exceptions.py              # Custom exception handlers
-│   ├── formatting.py              # Shared numeric truncation helper
-│   └── log_config.py              # Logging setup
-└── rebalance/
-    └── rebalance.py               # Core algorithms (DP + greedy)
+├── main.py          # FastAPI entry point
+├── api/             # Route handlers (rebalance, tickers, health)
+├── schemas/         # Pydantic request/response models
+├── services/        # Orchestration logic
+├── market_data/     # Yahoo Finance provider + cache (local/Redis)
+├── core/            # Config, logging, exceptions
+└── rebalance/       # Core algorithms (greedy + knapsack DP)
 
 tests/
-├── conftest.py                    # Shared fixtures (mock provider, test client)
-├── unit/
-│   ├── test_rebalance_core.py     # Algorithm unit tests
-│   ├── test_rebalance_service.py  # Orchestration + fee logic
-│   ├── test_cache.py              # LocalCache + RedisCache
-│   └── test_schema_validation.py  # Pydantic model validation
-└── integration/
-    └── test_rebalance_endpoint.py # End-to-end HTTP tests
+├── unit/            # Algorithm, service, cache, schema tests
+└── integration/     # End-to-end HTTP tests
 ```
 
 ## Running the Server

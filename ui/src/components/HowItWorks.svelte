@@ -9,21 +9,21 @@
           <div class="how-num">01</div>
           <div>
             <div class="how-step-title">Set your target allocation</div>
-            <div class="how-step-text">Enter each ETF ticker, your target weight, current share count, and your broker's fee. DCA OPT fetches live prices from Yahoo Finance at calculation time, cached for 5 minutes.</div>
+            <div class="how-step-text">Enter each ETF ticker, your target weight, current share count, and your broker's fee. PestoENGINE fetches live prices from Yahoo Finance at calculation time, cached for 5 minutes.</div>
           </div>
         </div>
         <div class="how-step">
           <div class="how-num">02</div>
           <div>
             <div class="how-step-title">Drop in your monthly cash</div>
-            <div class="how-step-text">Enter the cash you want to deploy this period. Enable buy-only mode (default) to ensure DCA OPT never triggers a sale. Enable knapsack mode to maximise cash deployment. Set cash to 0 to rebalance without adding new capital.</div>
+            <div class="how-step-text">Enter the cash you want to deploy this period. Enable buy-only mode (default) to ensure PestoENGINE never triggers a sale. Enable knapsack mode to maximise cash deployment. Set cash to 0 to rebalance without adding new capital.</div>
           </div>
         </div>
         <div class="how-step">
           <div class="how-num">03</div>
           <div>
             <div class="how-step-title">Get the exact buy order</div>
-            <div class="how-step-text">DCA OPT returns the exact number of shares to buy per asset, with fees already priced in, allocation drift shown, and leftover change made explicit. Same inputs always produce the same output.</div>
+            <div class="how-step-text">PestoENGINE returns the exact number of shares to buy per asset, with fees already priced in, allocation drift shown, and leftover change made explicit. Same inputs always produce the same output.</div>
           </div>
         </div>
       </div>

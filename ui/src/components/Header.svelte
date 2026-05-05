@@ -12,7 +12,7 @@
 </script>
 
 <nav>
-  <span class="wordmark">DCA OPT</span>
+  <img src="/brand-logo-nav.svg" alt="PestoENGINE" class="wordmark-logo" />
   <div class="nav-actions">
     <button type="button" class="nav-btn" on:click={() => dispatch('requestImport')}>Import</button>
     <div class="nav-sep"></div>
@@ -59,27 +59,32 @@
     z-index: 100;
     background: var(--hero-bg);
     padding: 0 clamp(1rem, 4vw, 2rem);
-    height: 48px;
+    height: 64px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     border-bottom: 1px solid var(--hero-border);
   }
-  .wordmark {
-    font-family: var(--mono);
-    font-size: 0.9375rem;
-    font-weight: 600;
-    color: #fff;
-    letter-spacing: 0.08em;
+  .wordmark-logo {
+    height: 48px;
+    width: auto;
+    display: block;
   }
   .nav-actions {
     display: flex;
     gap: 1rem;
     align-items: center;
   }
-  @media (max-width: 400px) {
-    .nav-actions { gap: 0.625rem; }
-    .nav-btn { font-size: 0.75rem; }
+  @media (max-width: 500px) {
+    nav {
+      height: auto;
+      flex-direction: column;
+      align-items: flex-start;
+      padding-top: 0.625rem;
+      padding-bottom: 0.625rem;
+      gap: 0.375rem;
+    }
+    .nav-actions { padding-left: 5px; }
   }
   .nav-btn {
     font-family: var(--sans);

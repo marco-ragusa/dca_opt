@@ -115,7 +115,7 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `dca-opt-portfolio-${now.toISOString().slice(0, 10)}.json`;
+    a.download = `pesto-engine-portfolio-${now.toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -272,9 +272,9 @@
 <OssSection />
 
 <footer>
-  <span>DCA OPT - Rebalancing execution engine for passive ETF investors</span>
+  <span>PestoENGINE – Portfolio Rebalancing</span>
   <div class="footer-links">
-    <a href="https://github.com/marco-ragusa/dca_opt" target="_blank" rel="noopener noreferrer">GitHub</a>
+    <a href="https://github.com/PestoENGINE/PestoENGINE" target="_blank" rel="noopener noreferrer">GitHub</a>
     <span class="footer-sep">·</span>
     <span>MIT License</span>
     <span class="footer-sep">·</span>

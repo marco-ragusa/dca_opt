@@ -188,7 +188,7 @@ class TestRedistributeChange(unittest.TestCase):
 class TestFeeEdgeCases(unittest.TestCase):
     """Tests that verify the fee-subtraction contract.
 
-    These tests document the expected behaviour so that anyone reading dca_opt.py
+    These tests document the expected behaviour so that anyone reading rebalance.py
     understands that max(0, r - fee) must be applied before converting currency
     amounts to share quantities.
     """

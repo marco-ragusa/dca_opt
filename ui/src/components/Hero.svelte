@@ -3,14 +3,14 @@
   <div class="hero-inner">
     <div class="hero-kicker">Rebalancing execution engine</div>
     <h1 class="hero-headline">You know your allocation.<br>Now know exactly what to buy.</h1>
-    <p class="hero-sub">Enter your ETF allocations, current holdings, and monthly cash. DCA OPT returns the exact number of shares to buy, with your broker's fee structure already priced in.</p>
+    <p class="hero-sub">Enter your ETF allocations, current holdings, and monthly cash. PestoENGINE returns the exact number of shares to buy, with your broker's fee structure already priced in.</p>
   </div>
 </div>
 
 <style>
   .hero {
     background: var(--hero-bg);
-    padding: clamp(2rem, 5vw, 3.5rem) clamp(1rem, 4vw, 2rem) clamp(2rem, 4vw, 2.75rem);
+    padding: clamp(2rem, 4vw, 2.75rem) clamp(1rem, 4vw, 2rem);
     border-bottom: 1px solid var(--hero-border);
     position: relative;
     overflow: hidden;

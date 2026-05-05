@@ -1,9 +1,10 @@
-# DCA OPT
+<img src="brand-logo.svg" alt="PestoENGINE – Portfolio Rebalancing" width="480" />
+
 ### Rebalancing execution engine for passive ETF investors
 
 You know your allocation. Now know exactly what to buy.
 
-Enter your ETF targets, current holdings, and the cash you want to deploy. DCA OPT returns the exact number of shares to buy per asset, with your broker's fee structure already priced in, allocation drift shown, and leftover change made explicit. Same inputs always produce the same output.
+Enter your ETF targets, current holdings, and the cash you want to deploy. PestoENGINE returns the exact number of shares to buy per asset, with your broker's fee structure already priced in, allocation drift shown, and leftover change made explicit. Same inputs always produce the same output.
 
 No accounts. No data stored. Self-hostable. MIT licensed.
 
@@ -13,10 +14,10 @@ No accounts. No data stored. Self-hostable. MIT licensed.
 Enter each ETF ticker, your target weight, current share count, and your broker's fee. Live prices are fetched from Yahoo Finance at calculation time.
 
 **02 - Drop in your monthly cash**  
-Enter the cash you want to deploy this period. Enable buy-only mode to ensure DCA OPT never triggers a sale. Enable knapsack mode to maximise cash deployment.
+Enter the cash you want to deploy this period. Enable buy-only mode to ensure PestoENGINE never triggers a sale. Enable knapsack mode to maximise cash deployment.
 
 **03 - Get the exact buy order**  
-DCA OPT returns the exact number of shares to buy per asset. Deterministic, explainable, verifiable.
+PestoENGINE returns the exact number of shares to buy per asset. Deterministic, explainable, verifiable.
 
 ## Algorithm modes
 
@@ -30,19 +31,32 @@ The algorithm is not proprietary. The source is in [`app/rebalance/rebalance.py`
 
 ## Prerequisites
 
-- Python 3.11+
-- Node.js 20+
+- **Docker** (recommended) — Docker Desktop or Docker Engine
+- **Manual** — Python 3.11+, Node.js 20+
 
 ## Quick start
 
+### Docker
+
 ```bash
-# Clone
-git clone https://github.com/marco-ragusa/dca_opt
-cd dca_opt && cp .env.example .env
+git clone https://github.com/PestoENGINE/PestoENGINE
+cd PestoENGINE
+docker build -t pestoengine .
+docker run -d -p 8000:8000 pestoengine
+```
+
+App at `http://localhost:8000` · Swagger UI at `http://localhost:8000/docs`
+
+### Manual
+
+```bash
+git clone https://github.com/PestoENGINE/PestoENGINE
+cd PestoENGINE && cp .env.example .env
 
 # Backend
 python -m venv venv
-source venv/bin/activate          # Windows: venv\Scripts\Activate.ps1
+source venv/bin/activate
+# Windows: venv\Scripts\Activate.ps1
 pip install -r requirements-dev.txt
 uvicorn app.main:app --reload
 
@@ -51,15 +65,12 @@ cd ui && npm install
 npm run dev
 ```
 
-API at `http://localhost:8000` · Swagger UI at `http://localhost:8000/docs`  
-UI at `http://localhost:5173` (Vite proxies `/v1/*` to the backend in dev mode)
-
 For backend details (API reference, configuration, tests) see [`app/README.md`](app/README.md).  
 For frontend details (structure, build) see [`ui/README.md`](ui/README.md).
 
 ## Stack
 
-- **Backend** - FastAPI, Python 3.11+, Yahoo Finance (`yfinance`)
+- **Backend** - FastAPI, Python 3.11+, Yahoo Finance
 - **Frontend** - Svelte 4, TypeScript, Tailwind CSS, Vite
 - **Market data** - Yahoo Finance, fetched at request time, cached 5 minutes
 

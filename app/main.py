@@ -22,7 +22,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     yield
 
 
-app = FastAPI(title="DCA Rebalancer API", version="2.0.0", lifespan=lifespan)
+app = FastAPI(title="PestoENGINE API", version="2.0.0", lifespan=lifespan)
 
 _cors = get_settings().cors_origins
 _origins = [o.strip() for o in _cors.split(",") if o.strip()] if _cors else []

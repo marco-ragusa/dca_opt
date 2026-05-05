@@ -1,9 +1,9 @@
 import type { Asset, Settings } from './types';
 
 const KEYS = {
-  settings: 'dca_opt_settings',
-  assets: 'dca_opt_assets',
-  darkMode: 'dca_opt_dark_mode',
+  settings: 'pesto_engine_settings',
+  assets: 'pesto_engine_assets',
+  darkMode: 'pesto_engine_dark_mode',
 } as const;
 
 export const DEFAULT_SETTINGS: Settings = {
